@@ -4,6 +4,8 @@ export interface ModuleConfig {
 	host: string
 	auth: boolean
 	username: string
+	interval: 4
+	verbose: boolean
 }
 
 export interface ModuleSecrets {
@@ -41,6 +43,23 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 			default: 'admin',
 			width: 6,
 			isVisibleExpression: '$(options:auth)',
+		},
+		{
+			type: 'number',
+			id: 'interval',
+			width: 4,
+			label: 'Poll Interval',
+			description: 'mS',
+			default: 1000,
+			min: 200,
+			max: 60000,
+		},
+		{
+			type: 'checkbox',
+			id: 'verbose',
+			label: 'Verbose Logs',
+			width: 4,
+			default: false,
 		},
 	]
 }

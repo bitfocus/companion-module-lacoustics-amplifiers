@@ -1,16 +1,15 @@
 {
-	"id": "your-module-name",
-	"name": "your-module-name",
-	"shortname": "module-shortname",
-	"description": "A short one line description of your module",
+	"id": "lacoustics-amplifiers",
+	"name": "lacoustics-amplifiers",
+	"shortname": "L'A amplifiers",
+	"description": "Control L'Acoustics amplifiers via their HTTP Rest API.",
 	"version": "0.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/bitfocus/companion-module-your-module-name.git",
-	"bugs": "https://github.com/bitfocus/companion-module-your-module-name/issues",
+	"repository": "git+https://github.com/phillipivan/companion-module-lacoustic-amplifiers.git",
+	"bugs": "https://github.com/phillipivan/companion-module-lacoustic-amplifiers/issues",
 	"maintainers": [
 		{
-			"name": "Your name",
-			"email": "Your email"
+			"name": "Phillip Ivan Pietruschka"
 		}
 	],
 	"runtime": {
@@ -20,7 +19,7 @@
 		"entrypoint": "../dist/main.js"
 	},
 	"legacyIds": [],
-	"manufacturer": "Your company",
-	"products": ["Your product"],
-	"keywords": []
+	"manufacturer": "L'Acoustics",
+	"products": ["LA1.16i", "LA7.16i", "LA7.16", "LA12X", "LA4X", "LA2Xi", "LA8", "LA4", "P1", "LC16D", "LS10"],
+	"keywords": ["AVB", "Milan"]
 }

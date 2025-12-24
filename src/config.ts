@@ -2,7 +2,12 @@ import { Regex, type SomeCompanionConfigField } from '@companion-module/base'
 
 export interface ModuleConfig {
 	host: string
-	port: number
+	auth: boolean
+	username: string
+}
+
+export interface ModuleSecrets {
+	password: string
 }
 
 export function GetConfigFields(): SomeCompanionConfigField[] {
@@ -10,18 +15,32 @@ export function GetConfigFields(): SomeCompanionConfigField[] {
 		{
 			type: 'textinput',
 			id: 'host',
-			label: 'Target IP',
+			label: 'Target Hostname or IP',
 			width: 8,
-			regex: Regex.IP,
+			regex: Regex.HOSTNAME,
 		},
 		{
-			type: 'number',
-			id: 'port',
-			label: 'Target Port',
+			type: 'checkbox',
+			id: 'auth',
+			label: 'Use Authentication',
 			width: 4,
-			min: 1,
-			max: 65535,
-			default: 8000,
+			default: false,
+		},
+		{
+			type: 'textinput',
+			id: 'username',
+			label: 'Username',
+			default: 'admin',
+			width: 6,
+			isVisibleExpression: '$(options:auth)',
+		},
+		{
+			type: 'secret-text',
+			id: 'password',
+			label: 'Password',
+			default: 'admin',
+			width: 6,
+			isVisibleExpression: '$(options:auth)',
 		},
 	]
 }

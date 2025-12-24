@@ -1,3 +1,3 @@
-## Your module
+## L'Acoustic Amplifiers
 
-Write some help for your users here!
+HTTP Rest API

@@ -1,4 +1,4 @@
-import { DeviceStatusSchema } from './schemas.js'
+import { DeviceStatusSchema, type ControlDspOutputSchema } from './schemas.js'
 
 export class LacousticDevice {
 	#device!: DeviceStatusSchema
@@ -15,5 +15,13 @@ export class LacousticDevice {
 
 	get power(): boolean {
 		return this.#device.power.standby ?? false
+	}
+
+	get outputChannelCount(): number {
+		return this.#device.control.dsp.output.length
+	}
+
+	get outputChannels(): ControlDspOutputSchema[] {
+		return this.#device.control.dsp.output
 	}
 }

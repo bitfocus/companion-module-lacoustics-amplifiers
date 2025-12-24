@@ -256,9 +256,9 @@ export const GpioSchema = z.object({
 })
 
 export const ControlDspOutputSchema = Index.extend({
-	delay: z.number().int(),
-	gain: z.number(),
-	volume: z.number().int(),
+	delay: z.number().int().min(0).max(96000),
+	gain: z.number().min(-60).max(15),
+	volume: z.number().int().min(0).max(750),
 	mute: z.boolean(),
 	invert: z.boolean(),
 })

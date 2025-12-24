@@ -1,8 +1,18 @@
+import type { CompanionActionDefinition } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
 
+export enum ActionId {
+	Reboot = 'reboot',
+	Power = 'power',
+	OutputMute = 'outputMute',
+	OutputPolarity = 'outputPolarity',
+	OutputDelay = 'outputDelay',
+	OutputGain = 'outputGain',
+}
+
 export function UpdateActions(self: ModuleInstance): void {
-	self.setActionDefinitions({
-		reboot: {
+	const ActionDefinitions: { [id in ActionId]: CompanionActionDefinition | undefined } = {
+		[ActionId.Reboot]: {
 			name: 'Reboot',
 			options: [],
 			callback: async (_event) => {
@@ -15,7 +25,7 @@ export function UpdateActions(self: ModuleInstance): void {
 				}
 			},
 		},
-		power: {
+		[ActionId.Power]: {
 			name: 'Power',
 			options: [
 				{
@@ -51,8 +61,8 @@ export function UpdateActions(self: ModuleInstance): void {
 				}
 			},
 		},
-		muteOutput: {
-			name: 'Mute Output',
+		[ActionId.OutputMute]: {
+			name: 'Output - Mute',
 			options: [
 				{
 					type: 'number',
@@ -60,7 +70,7 @@ export function UpdateActions(self: ModuleInstance): void {
 					label: 'Channel',
 					default: 1,
 					min: 1,
-					max: 16,
+					max: self.device.outputChannelCount,
 					range: true,
 					step: 1,
 				},
@@ -69,7 +79,7 @@ export function UpdateActions(self: ModuleInstance): void {
 					id: 'state',
 					label: 'State',
 					choices: [
-						{ id: 'mute', label: 'Muted' },
+						{ id: 'mute', label: 'Mute' },
 						{ id: 'on', label: 'On' },
 						{ id: 'toggle', label: 'Toggle' },
 					],
@@ -86,8 +96,7 @@ export function UpdateActions(self: ModuleInstance): void {
 						newState = false
 						break
 					case 'toggle':
-						self.log('debug', `Mute toggle not implented yet`)
-						return
+						newState = !self.device.outputChannels[Number(event.options.channel)].mute
 				}
 				try {
 					await self.clientPost(`/control/dsp/output/${event.options.channel}/mute`, newState)
@@ -98,5 +107,135 @@ export function UpdateActions(self: ModuleInstance): void {
 				}
 			},
 		},
-	})
+		[ActionId.OutputPolarity]: {
+			name: 'Output - Polarity',
+			options: [
+				{
+					type: 'number',
+					id: 'channel',
+					label: 'Channel',
+					default: 1,
+					min: 1,
+					max: self.device.outputChannelCount,
+					range: true,
+					step: 1,
+				},
+				{
+					type: 'dropdown',
+					id: 'state',
+					label: 'State',
+					choices: [
+						{ id: 'invert', label: 'Invert' },
+						{ id: 'normal', label: 'Normal' },
+						{ id: 'toggle', label: 'Toggle' },
+					],
+					default: 'on',
+				},
+			],
+			callback: async (event) => {
+				let newState = false
+				switch (event.options.state?.toString()) {
+					case 'invert':
+						newState = true
+						break
+					case 'normal':
+						newState = false
+						break
+					case 'toggle':
+						newState = !self.device.outputChannels[Number(event.options.channel)].invert
+				}
+				try {
+					await self.clientPost(`/control/dsp/output/${event.options.channel}/invert`, newState)
+					self.log('info', `Channel ${event.options.channel} Polarity ${newState ? 'inverted' : 'normal'}`)
+				} catch (err) {
+					self.log('warn', `Channel ${event.options.channel} Polarity Invert failed`)
+					self.handleError(err)
+				}
+			},
+		},
+		[ActionId.OutputDelay]: {
+			name: 'Output - Delay',
+			options: [
+				{
+					type: 'number',
+					id: 'channel',
+					label: 'Channel',
+					default: 1,
+					min: 1,
+					max: self.device.outputChannelCount,
+					range: true,
+					step: 1,
+				},
+				{
+					type: 'number',
+					id: 'delay',
+					label: 'Delay',
+					default: 0,
+					min: 0,
+					max: 96000,
+					description: 'Output delay in samples',
+				},
+			],
+			callback: async (event) => {
+				const delay = Math.round(Number(event.options.delay))
+
+				try {
+					await self.clientPost(`/control/dsp/output/${event.options.channel}/delay`, delay)
+					self.log('info', `Channel ${event.options.channel} delay ${delay} samples`)
+				} catch (err) {
+					self.log('warn', `Channel ${event.options.channel} Delay set failed`)
+					self.handleError(err)
+				}
+			},
+			learn: async (event) => {
+				return {
+					...event.options,
+					delay: self.device.outputChannels[Number(event.options.channel)].delay,
+				}
+			},
+		},
+		[ActionId.OutputGain]: {
+			name: 'Output - Gain',
+			options: [
+				{
+					type: 'number',
+					id: 'channel',
+					label: 'Channel',
+					default: 1,
+					min: 1,
+					max: self.device.outputChannelCount,
+					range: true,
+					step: 1,
+				},
+				{
+					type: 'number',
+					id: 'gain',
+					label: 'Gain',
+					default: 0,
+					min: -60,
+					max: 15,
+					description: 'Output gain in dB',
+				},
+			],
+			callback: async (event) => {
+				const gain = Number(event.options.gain)
+
+				try {
+					await self.clientPost(`/control/dsp/output/${event.options.channel}/gain`, gain)
+					self.log('info', `Channel ${event.options.channel} gain ${gain} dB`)
+				} catch (err) {
+					self.log('warn', `Channel ${event.options.channel} gain set failed`)
+					self.handleError(err)
+				}
+			},
+			learn: async (event) => {
+				return {
+					...event.options,
+					gain: self.device.outputChannels[Number(event.options.channel)].gain,
+				}
+			},
+		},
+	}
+
+	self.setActionDefinitions(ActionDefinitions)
 }

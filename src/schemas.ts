@@ -527,7 +527,7 @@ export const DeviceStatusSchema = z.object({
 	//	clock: ClockSchema,
 	//	monitor: MonitorSchema,
 	//	en54: En54Schema,
-	//	level: LevelSchema,
+	level: LevelSchema,
 	//	layout: LayoutSchema,
 	//	avb: AvbSchema,
 	//	aes67: Aes67Schema,

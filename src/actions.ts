@@ -1,5 +1,6 @@
 import type { CompanionActionDefinition } from '@companion-module/base'
 import type { ModuleInstance } from './main.js'
+import { ChannelOption } from './options.js'
 
 export enum ActionId {
 	Reboot = 'reboot',
@@ -64,16 +65,7 @@ export function UpdateActions(self: ModuleInstance): void {
 		[ActionId.OutputMute]: {
 			name: 'Output - Mute',
 			options: [
-				{
-					type: 'number',
-					id: 'channel',
-					label: 'Channel',
-					default: 1,
-					min: 1,
-					max: self.device.outputChannelCount,
-					range: true,
-					step: 1,
-				},
+				ChannelOption(self.device.outputChannelCount),
 				{
 					type: 'dropdown',
 					id: 'state',
@@ -96,7 +88,7 @@ export function UpdateActions(self: ModuleInstance): void {
 						newState = false
 						break
 					case 'toggle':
-						newState = !self.device.outputChannels[Number(event.options.channel)].mute
+						newState = !self.device.outputChannels[Number(event.options.channel) - 1].mute
 				}
 				try {
 					await self.clientPost(`/control/dsp/output/${event.options.channel}/mute`, newState)
@@ -110,16 +102,7 @@ export function UpdateActions(self: ModuleInstance): void {
 		[ActionId.OutputPolarity]: {
 			name: 'Output - Polarity',
 			options: [
-				{
-					type: 'number',
-					id: 'channel',
-					label: 'Channel',
-					default: 1,
-					min: 1,
-					max: self.device.outputChannelCount,
-					range: true,
-					step: 1,
-				},
+				ChannelOption(self.device.outputChannelCount),
 				{
 					type: 'dropdown',
 					id: 'state',
@@ -129,7 +112,7 @@ export function UpdateActions(self: ModuleInstance): void {
 						{ id: 'normal', label: 'Normal' },
 						{ id: 'toggle', label: 'Toggle' },
 					],
-					default: 'on',
+					default: 'normal',
 				},
 			],
 			callback: async (event) => {
@@ -156,16 +139,7 @@ export function UpdateActions(self: ModuleInstance): void {
 		[ActionId.OutputDelay]: {
 			name: 'Output - Delay',
 			options: [
-				{
-					type: 'number',
-					id: 'channel',
-					label: 'Channel',
-					default: 1,
-					min: 1,
-					max: self.device.outputChannelCount,
-					range: true,
-					step: 1,
-				},
+				ChannelOption(self.device.outputChannelCount),
 				{
 					type: 'number',
 					id: 'delay',
@@ -190,23 +164,14 @@ export function UpdateActions(self: ModuleInstance): void {
 			learn: async (event) => {
 				return {
 					...event.options,
-					delay: self.device.outputChannels[Number(event.options.channel)].delay,
+					delay: self.device.outputChannels[Number(event.options.channel) - 1].delay,
 				}
 			},
 		},
 		[ActionId.OutputGain]: {
 			name: 'Output - Gain',
 			options: [
-				{
-					type: 'number',
-					id: 'channel',
-					label: 'Channel',
-					default: 1,
-					min: 1,
-					max: self.device.outputChannelCount,
-					range: true,
-					step: 1,
-				},
+				ChannelOption(self.device.outputChannelCount),
 				{
 					type: 'number',
 					id: 'gain',
@@ -231,7 +196,7 @@ export function UpdateActions(self: ModuleInstance): void {
 			learn: async (event) => {
 				return {
 					...event.options,
-					gain: self.device.outputChannels[Number(event.options.channel)].gain,
+					gain: self.device.outputChannels[Number(event.options.channel) - 1].gain,
 				}
 			},
 		},

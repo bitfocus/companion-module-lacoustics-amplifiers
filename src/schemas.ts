@@ -44,7 +44,7 @@ export const NetworkSchema = z.object({
 		select: Nullable(z.any()),
 	}),
 	audio: z.object({
-		active: z.literal('AES67'),
+		active: z.enum(['AVB', 'AES67']),
 	}),
 })
 
@@ -55,7 +55,7 @@ export const AvdeccSchema = z.object({
 
 export const HmiSchema = z.object({
 	identify: Bool,
-	intensity: z.enum(['NORMAL', 'LOW', 'HIGH']),
+	intensity: z.enum(['OFF', 'LOW', 'MEDIUM', 'NORMAL', 'HIGH']),
 })
 
 export const PtpClockSchema = z.object({
@@ -74,19 +74,19 @@ export const PtpSchema = z.object({
 export const BridgePortSchema = Index.extend({
 	enable: Bool,
 	status: z.object({
-		report: Str,
-		error: Str,
-		warning: Str,
+		report: z.enum(['idle', 'error', 'warning', 'ok']),
+		error: z.enum(['none', 'internal', 'down', 'pdelay']),
+		warning: z.enum(['none', 'speed', 'duplex']),
 		clear_error: Nullable(z.any()),
 	}),
 	link: z.object({
-		state: Str,
-		duplex: Str,
-		speed: Str,
+		state: z.enum(['down', 'up']),
+		duplex: z.enum(['half', 'full']),
+		speed: z.enum(['10', '100', '1000']),
 	}),
 	rstp: z.object({
-		state: Str,
-		role: Str,
+		state: z.enum(['disabled', 'blocking', 'forwarding', 'learning']),
+		role: z.enum(['disabled', 'root', 'designated', 'alternate', 'backup']),
 		tc_detected: Bool,
 	}),
 	gptp: z.object({
@@ -140,20 +140,20 @@ export const InputSchema = z.object({
 	source: z.array(
 		z.object({
 			channel: Int,
-			select: Str,
-			active: Str,
+			select: z.enum(['network', 'aux']),
+			active: z.enum(['network', 'aux']),
 		}),
 	),
 	aux: z.object({
 		ana: z.object({ gain: Num }),
 		mode: z.object({
-			select: Str,
-			active: Str,
+			select: z.enum(['ana', 'aes']),
+			active: z.enum(['ana', 'aes']),
 		}),
 		channel: z.array(
 			z.object({
 				input: Int,
-				value: Str,
+				value: z.enum(['A', 'B']),
 			}),
 		),
 	}),
@@ -243,11 +243,39 @@ export const GpioSchema = z.object({
 
 	input: z.array(
 		Index.extend({
-			state: z.string(),
-			function_low: z.string(),
-			function_high: z.string(),
-			config_slot_a: z.number().int(),
-			config_slot_b: z.number().int(),
+			state: z.enum(['low', 'high']),
+			function_low: z.enum([
+				'none',
+				'mute_set',
+				'mute_clr',
+				'mute_toggle',
+				'load_config_a',
+				'load_config_b',
+				'load_config_next',
+				'load_config_previous',
+				'standby',
+				'wakeup',
+				'standby_wakeup',
+				'gain_up',
+				'gain_down',
+			]),
+			function_high: z.enum([
+				'none',
+				'mute_set',
+				'mute_clr',
+				'mute_toggle',
+				'load_config_a',
+				'load_config_b',
+				'load_config_next',
+				'load_config_previous',
+				'standby',
+				'wakeup',
+				'standby_wakeup',
+				'gain_up',
+				'gain_down',
+			]),
+			config_slot_a: z.number().int().min(1).max(10),
+			config_slot_b: z.number().int().min(1).max(10),
 			error: z.number().int(),
 		}),
 	),
@@ -272,8 +300,8 @@ export const ControlSchema = z.object({
 export const ClockSchema = z.object({
 	source: z.object({
 		locked: z.boolean(),
-		status: z.enum(['locked', 'unlocked']),
-		type: z.enum(['ptp', 'internal', 'wordclock']).or(z.string()),
+		status: z.enum(['stopped', 'starting', 'locking', 'locked', 'holdover', 'freewheel', 'fault']),
+		type: z.enum(['internal', 'avb', 'crf', 'ptp']).or(z.string()),
 		audio_stream: z.number().int(),
 		selected_ptp_clock: z.number().int(),
 	}),
@@ -295,8 +323,8 @@ export const MonitorOutputErrorSchema = z.object({
 export const MonitorOutputSchema = Index.extend({
 	clip: z.boolean(),
 	limit: z.boolean(),
-	state: z.enum(['ok', 'error']),
-	temperature_state: z.enum(['ok', 'warning', 'error']),
+	state: z.enum(['ok', 'protected', 'disabled', 'retry']),
+	temperature_state: z.enum(['ok', 'high', 'over']),
 	errors: MonitorOutputErrorSchema,
 })
 
@@ -337,7 +365,7 @@ export const En54Schema = z.object({
 		resolution: z.number(),
 	}),
 
-	options: z.string(),
+	options: z.enum(['PILOT_TONE', 'AES_LOCK', 'AES_AUDIO', 'SPEAKER', 'STREAM_LOCK']),
 	period: z.number().int(),
 
 	siggen: z.object({

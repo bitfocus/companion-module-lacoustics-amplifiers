@@ -1,4 +1,5 @@
 import * as z from 'zod'
+import * as Enums from './enums.js'
 
 const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Faf]{2})|([0-9A-Fa-f]{4}\.){2}([0-9A-Fa-f]{4})$/
 
@@ -12,6 +13,8 @@ const Bool = z.boolean()
 const Int = z.number().int()
 const Num = z.number()
 const Str = z.string()
+
+// Schemas
 
 export const InfoSchema = z.object({
 	name: Str,
@@ -44,7 +47,7 @@ export const NetworkSchema = z.object({
 		select: Nullable(z.any()),
 	}),
 	audio: z.object({
-		active: z.enum(['AVB', 'AES67']),
+		active: Enums.NetworkAudioActiveEnum,
 	}),
 })
 
@@ -55,7 +58,7 @@ export const AvdeccSchema = z.object({
 
 export const HmiSchema = z.object({
 	identify: Bool,
-	intensity: z.enum(['OFF', 'LOW', 'MEDIUM', 'NORMAL', 'HIGH']),
+	intensity: Enums.HdmiIntensityEnum,
 })
 
 export const PtpClockSchema = z.object({
@@ -74,19 +77,19 @@ export const PtpSchema = z.object({
 export const BridgePortSchema = Index.extend({
 	enable: Bool,
 	status: z.object({
-		report: z.enum(['idle', 'error', 'warning', 'ok']),
-		error: z.enum(['none', 'internal', 'down', 'pdelay']),
-		warning: z.enum(['none', 'speed', 'duplex']),
+		report: Enums.BridgePortStatusReportEnum,
+		error: Enums.BridgePortStatusErrorEnum,
+		warning: Enums.BridgePortStatusWarningEnum,
 		clear_error: Nullable(z.any()),
 	}),
 	link: z.object({
-		state: z.enum(['down', 'up']),
-		duplex: z.enum(['half', 'full']),
-		speed: z.enum(['10', '100', '1000']),
+		state: Enums.BridgePortLinkStateEnum,
+		duplex: Enums.BridgePortLinkDuplexEnum,
+		speed: Enums.BridgePortLinkSpeedEnum,
 	}),
 	rstp: z.object({
-		state: z.enum(['disabled', 'blocking', 'forwarding', 'learning']),
-		role: z.enum(['disabled', 'root', 'designated', 'alternate', 'backup']),
+		state: Enums.BridgePortRstpStateEnum,
+		role: Enums.BridgePortRstpRoleEnum,
 		tc_detected: Bool,
 	}),
 	gptp: z.object({
@@ -140,20 +143,20 @@ export const InputSchema = z.object({
 	source: z.array(
 		z.object({
 			channel: Int,
-			select: z.enum(['network', 'aux']),
-			active: z.enum(['network', 'aux']),
+			select: Enums.NetworkAuxEnum,
+			active: Enums.NetworkAuxEnum,
 		}),
 	),
 	aux: z.object({
 		ana: z.object({ gain: Num }),
 		mode: z.object({
-			select: z.enum(['ana', 'aes']),
-			active: z.enum(['ana', 'aes']),
+			select: Enums.AnaAesEnum,
+			active: Enums.AnaAesEnum,
 		}),
 		channel: z.array(
 			z.object({
 				input: Int,
-				value: z.enum(['A', 'B']),
+				value: Enums.ABEnum,
 			}),
 		),
 	}),
@@ -186,9 +189,9 @@ export const PowerSchema = z.object({
 })
 
 export const GpioOutputSchema = Index.extend({
-	state: z.enum(['open', 'closed']),
-	function: z.enum(['none', 'state', 'fault', 'alive', 'eth_link', 'en54', 'aes_lock', 'stream_lock']),
-	state_select: z.enum(['open', 'closed']),
+	state: Enums.GpioOutputStateEnum,
+	function: Enums.GpioOutputFunctionEnum,
+	state_select: Enums.GpioOutputStateSelectEnum,
 	alive_period: z.number().int().min(1).max(60),
 
 	fault_select: z.object({
@@ -236,44 +239,16 @@ export const GpioOutputSchema = Index.extend({
 export const GpioSchema = z.object({
 	pin: z.array(
 		Index.extend({
-			direction: z.enum(['input', 'output']),
+			direction: Enums.GpioPinDirectionEnum,
 			state: z.boolean(),
 		}),
 	),
 
 	input: z.array(
 		Index.extend({
-			state: z.enum(['low', 'high']),
-			function_low: z.enum([
-				'none',
-				'mute_set',
-				'mute_clr',
-				'mute_toggle',
-				'load_config_a',
-				'load_config_b',
-				'load_config_next',
-				'load_config_previous',
-				'standby',
-				'wakeup',
-				'standby_wakeup',
-				'gain_up',
-				'gain_down',
-			]),
-			function_high: z.enum([
-				'none',
-				'mute_set',
-				'mute_clr',
-				'mute_toggle',
-				'load_config_a',
-				'load_config_b',
-				'load_config_next',
-				'load_config_previous',
-				'standby',
-				'wakeup',
-				'standby_wakeup',
-				'gain_up',
-				'gain_down',
-			]),
+			state: Enums.GpioInputStateEnum,
+			function_low: Enums.GpioInputFunctionLowEnum,
+			function_high: Enums.GpioInputFunctionHighEnum,
 			config_slot_a: z.number().int().min(1).max(10),
 			config_slot_b: z.number().int().min(1).max(10),
 			error: z.number().int(),
@@ -300,8 +275,8 @@ export const ControlSchema = z.object({
 export const ClockSchema = z.object({
 	source: z.object({
 		locked: z.boolean(),
-		status: z.enum(['stopped', 'starting', 'locking', 'locked', 'holdover', 'freewheel', 'fault']),
-		type: z.enum(['internal', 'avb', 'crf', 'ptp']).or(z.string()),
+		status: Enums.ClockSourceStatusEnum,
+		type: Enums.ClockSourceTypeEnum,
 		audio_stream: z.number().int(),
 		selected_ptp_clock: z.number().int(),
 	}),
@@ -323,14 +298,14 @@ export const MonitorOutputErrorSchema = z.object({
 export const MonitorOutputSchema = Index.extend({
 	clip: z.boolean(),
 	limit: z.boolean(),
-	state: z.enum(['ok', 'protected', 'disabled', 'retry']),
-	temperature_state: z.enum(['ok', 'high', 'over']),
+	state: Enums.MonitorOutputStateEnum,
+	temperature_state: Enums.MonitorOutputTemperatureStateEnum,
 	errors: MonitorOutputErrorSchema,
 })
 
 export const MonitorSchema = z.object({
-	error: z.enum(['ok', 'dsp', 'power', 'reserved', 'init', 'hardware']),
-	fuse_protect: z.enum(['ok', 'limiting']),
+	error: Enums.MonitorErrorEnum,
+	fuse_protect: Enums.MonitorFuseProtectEnum,
 	output: z.array(MonitorOutputSchema),
 })
 
@@ -366,7 +341,7 @@ export const En54Schema = z.object({
 		resolution: z.number(),
 	}),
 
-	options: z.enum(['PILOT_TONE', 'AES_LOCK', 'AES_AUDIO', 'SPEAKER', 'STREAM_LOCK']),
+	options: Enums.En54OptionsEnum,
 	period: z.number().int(),
 
 	siggen: z.object({
@@ -386,7 +361,7 @@ export const En54Schema = z.object({
 		}),
 	}),
 
-	state: z.enum(['ok', 'error']),
+	state: Enums.En54StateEnum,
 	errors: ErrorsSchema,
 })
 
@@ -414,7 +389,7 @@ export const LayoutSchema = z.object({
 	active: z.object({
 		name: z.string(),
 		index: z.number().int(),
-		source: z.enum(['none', 'factory', 'user', 'configuration']),
+		source: Enums.LayoutActiveSourceEnum,
 	}),
 
 	load_user_layout: z.any().nullable(),
@@ -434,54 +409,24 @@ export const AvbSchema = z.object({
 
 		clock_stream: z.object({
 			format: z.object({ raw: z.string() }),
-			status: z.enum(['IDLE', 'ERROR', 'WARNING', 'OK']),
+			status: Enums.AvbInputClockStreamStatusEnum,
 			primary: z.object({
 				status: z.object({
-					report: z.enum(['IDLE', 'ERROR', 'CONNECTING', 'CONNECTED', 'SYNC']),
-					error: z.enum(['NONE', 'TIMEOUT', 'CONNECTION', 'RESERVATION', 'DATA']),
+					report: Enums.AvbInputClockStreamStatusReportEnum,
+					error: Enums.AvbInputClockStreamStatusErrorEnum,
 					connection_fault: z.number().int(),
 					reservation_fault: z.number().int(),
 				}),
-				state: z.enum([
-					'not_bound',
-					'waiting_talker',
-					'connecting',
-					'con_timeout',
-					'con_error',
-					'waiting_rsv',
-					'rsv_error',
-					'waiting_start',
-					'waiting_data',
-					'data_error',
-					'validating',
-					'ready',
-					'waiting_mclk',
-					'locked',
-				]),
+				state: Enums.AvbInputClockStreamStateEnum,
 			}),
 			secondary: z.object({
 				status: z.object({
-					report: z.enum(['IDLE', 'ERROR', 'CONNECTING', 'CONNECTED', 'SYNC']),
-					error: z.enum(['NONE', 'TIMEOUT', 'CONNECTION', 'RESERVATION', 'DATA']),
+					report: Enums.AvbInputClockStreamStatusReportEnum,
+					error: Enums.AvbInputClockStreamStatusErrorEnum,
 					connection_fault: z.number().int(),
 					reservation_fault: z.number().int(),
 				}),
-				state: z.enum([
-					'not_bound',
-					'waiting_talker',
-					'connecting',
-					'con_timeout',
-					'con_error',
-					'waiting_rsv',
-					'rsv_error',
-					'waiting_start',
-					'waiting_data',
-					'data_error',
-					'validating',
-					'ready',
-					'waiting_mclk',
-					'locked',
-				]),
+				state: Enums.AvbInputClockStreamStateEnum,
 			}),
 		}),
 
@@ -489,60 +434,30 @@ export const AvbSchema = z.object({
 			Index.extend({
 				format: z.object({
 					raw: z.string(),
-					type: z.enum(['AAF', 'AM824']),
-					rate: z.enum(['96kHz', '48kHz']),
+					type: Enums.AvbInputAudioStreamFormatTypeEnum,
+					rate: Enums.AvbInputAudioStreamFormatRateEnum,
 					channels: z.number().int().min(0),
 				}),
-				status: z.enum(['IDLE', 'ERROR', 'WARNING', 'OK']),
+				status: Enums.AvbInputAudioStreamStatusEnum,
 				primary: z.object({
 					status: z.object({
-						report: z.enum(['IDLE', 'ERROR', 'CONNECTING', 'CONNECTED', 'SYNC']),
-						error: z.enum(['NONE', 'TIMEOUT', 'CONNECTION', 'RESERVATION', 'DATA']),
+						report: Enums.AvbInputAudioStreamStatusReportEnum,
+						error: Enums.AvbInputAudioStreamStatusErrorEnum,
 						connection_fault: z.number().int(),
 						reservation_fault: z.number().int(),
 					}),
 					locked: z.boolean(),
-					state: z.enum([
-						'not_bound',
-						'waiting_talker',
-						'connecting',
-						'con_timeout',
-						'con_error',
-						'waiting_rsv',
-						'rsv_error',
-						'waiting_start',
-						'waiting_data',
-						'data_error',
-						'validating',
-						'ready',
-						'waiting_mclk',
-						'locked',
-					]),
+					state: Enums.AvbInputAudioStreamStateEnum,
 				}),
 				secondary: z.object({
 					status: z.object({
-						report: z.enum(['IDLE', 'ERROR', 'CONNECTING', 'CONNECTED', 'SYNC']),
-						error: z.enum(['NONE', 'TIMEOUT', 'CONNECTION', 'RESERVATION', 'DATA']),
+						report: Enums.AvbInputAudioStreamStatusReportEnum,
+						error: Enums.AvbInputAudioStreamStatusErrorEnum,
 						connection_fault: z.number().int(),
 						reservation_fault: z.number().int(),
 					}),
 					locked: z.boolean(),
-					state: z.enum([
-						'not_bound',
-						'waiting_talker',
-						'connecting',
-						'con_timeout',
-						'con_error',
-						'waiting_rsv',
-						'rsv_error',
-						'waiting_start',
-						'waiting_data',
-						'data_error',
-						'validating',
-						'ready',
-						'waiting_mclk',
-						'locked',
-					]),
+					state: Enums.AvbInputAudioStreamStateEnum,
 				}),
 			}),
 		),
@@ -553,28 +468,10 @@ export const AvbSchema = z.object({
 			format: z.object({ raw: z.string() }),
 			latency: z.number().int().min(0).max(2000000),
 			primary: z.object({
-				state: z.enum([
-					'idle',
-					'waiting_destination_mac_address',
-					'waiting_listener_connection_request',
-					'waiting_stream_id',
-					'waiting_stream_reservation',
-					'stream_reservation_error',
-					'connected',
-					'streaming',
-				]),
+				state: Enums.AvbOutputClockStreamStateEnum,
 			}),
 			secondary: z.object({
-				state: z.enum([
-					'idle',
-					'waiting_destination_mac_address',
-					'waiting_listener_connection_request',
-					'waiting_stream_id',
-					'waiting_stream_reservation',
-					'stream_reservation_error',
-					'connected',
-					'streaming',
-				]),
+				state: Enums.AvbOutputClockStreamStateEnum,
 			}),
 		}),
 	}),
@@ -592,29 +489,29 @@ export const Aes67Schema = z.object({
 
 		audio_stream: z.array(
 			Index.extend({
-				cmd: z.enum(['STOP', 'START']),
-				status: z.enum(['IDLE', 'ERROR', 'WARNING', 'OK']),
+				cmd: Enums.Aes67AudioStreamCmdEnum,
+				status: Enums.Aes67AudioStreamStatusEnum,
 				primary: z.object({
 					ip_dest: z.string(),
 					port_dest: z.number().int().min(0).max(65535),
 					status: z.object({
-						report: z.enum(['IDLE', 'ERROR', 'CONNECTING', 'CONNECTED']),
-						error: z.enum(['NONE', 'TIMING', 'FORMAT', 'DISCONNECTED', 'CONFLICT']),
+						report: Enums.Aes67AudioStreamStatusReportEnum,
+						error: Enums.Aes67AudioStreamStatusErrorEnum,
 					}),
 				}),
 				secondary: z.object({
 					ip_dest: z.string(),
 					port_dest: z.number().int(),
 					status: z.object({
-						report: z.enum(['IDLE', 'ERROR', 'CONNECTING', 'CONNECTED']),
-						error: z.enum(['NONE', 'TIMING', 'FORMAT', 'DISCONNECTED', 'CONFLICT']),
+						report: Enums.Aes67AudioStreamStatusReportEnum,
+						error: Enums.Aes67AudioStreamStatusErrorEnum,
 					}),
 				}),
 				format: z.object({
 					nb_channels: z.number().int().min(1).max(8),
-					audio_format: z.enum(['L16PCM', 'L24PCM']),
+					audio_format: Enums.Aes67AudioStreamFormatAudioFormatEnum,
 				}),
-				packet_time: z.enum(['1 millisecond', '333 microseconds']),
+				packet_time: Enums.Aes67AudioStreamPacketTimeEnum,
 				media_offset: z.number().int(),
 				latency: z.number().int(),
 			}),

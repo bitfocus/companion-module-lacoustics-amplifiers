@@ -66,7 +66,7 @@ export const PtpClockSchema = z.object({
 })
 
 export const PtpSchema = z.object({
-	ptpv2_domain: Int,
+	ptpv2_domain: Int.min(0),
 	primary: PtpClockSchema,
 	secondary: PtpClockSchema,
 })
@@ -187,9 +187,9 @@ export const PowerSchema = z.object({
 
 export const GpioOutputSchema = Index.extend({
 	state: z.enum(['open', 'closed']),
-	function: z.enum(['none']),
+	function: z.enum(['none', 'state', 'fault', 'alive', 'eth_link', 'en54', 'aes_lock', 'stream_lock']),
 	state_select: z.enum(['open', 'closed']),
-	alive_period: z.number().int(),
+	alive_period: z.number().int().min(1).max(60),
 
 	fault_select: z.object({
 		amp: z.boolean(),
@@ -329,7 +329,8 @@ export const MonitorOutputSchema = Index.extend({
 })
 
 export const MonitorSchema = z.object({
-	error: z.enum(['ok', 'error']),
+	error: z.enum(['ok', 'dsp', 'power', 'reserved', 'init', 'hardware']),
+	fuse_protect: z.enum(['ok', 'limiting']),
 	output: z.array(MonitorOutputSchema),
 })
 
@@ -413,7 +414,7 @@ export const LayoutSchema = z.object({
 	active: z.object({
 		name: z.string(),
 		index: z.number().int(),
-		source: z.string(),
+		source: z.enum(['none', 'factory', 'user', 'configuration']),
 	}),
 
 	load_user_layout: z.any().nullable(),
@@ -458,9 +459,9 @@ export const AvbSchema = z.object({
 			Index.extend({
 				format: z.object({
 					raw: z.string(),
-					type: z.string(),
-					rate: z.string(),
-					channels: z.number().int(),
+					type: z.enum(['AAF', 'AM824']),
+					rate: z.enum(['96kHz', '48kHz']),
+					channels: z.number().int().min(0),
 				}),
 				status: z.string(),
 				primary: z.object({
@@ -509,8 +510,8 @@ export const Aes67Schema = z.object({
 
 		audio_stream: z.array(
 			Index.extend({
-				cmd: z.string(),
-				status: z.string(),
+				cmd: z.enum(['STOP', 'START']),
+				status: z.enum(['IDLE', 'ERROR', 'WARNING', 'OK']),
 				primary: z.object({
 					ip_dest: z.string(),
 					port_dest: z.number().int(),
@@ -529,9 +530,9 @@ export const Aes67Schema = z.object({
 				}),
 				format: z.object({
 					nb_channels: z.number().int(),
-					audio_format: z.string(),
+					audio_format: z.enum(['L16PCM', 'L24PCM']),
 				}),
-				packet_time: z.string(),
+				packet_time: z.enum(['1 millisecond', '333 microseconds']),
 				media_offset: z.number().int(),
 				latency: z.number().int(),
 			}),

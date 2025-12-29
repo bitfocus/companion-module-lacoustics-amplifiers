@@ -1,4 +1,4 @@
-import { DeviceStatusSchema, type ControlDspOutputSchema, type LevelPeakSchema } from './schemas.js'
+import { DeviceStatusSchema, type ControlDspOutputSchema, type LevelPeakSchema } from './schemas/base.js'
 
 export class LacousticDevice {
 	#device!: DeviceStatusSchema

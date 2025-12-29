@@ -1,14 +1,43 @@
 import { z } from 'zod'
 
 /* =========================
+ * Info
+ * ========================= */
+
+export const InfoNameEnum = z.enum([
+	'LA1.16I',
+	'LA12X',
+	'LA2XI',
+	'LA4',
+	'LA4X',
+	'LA8',
+	'LA7.16',
+	'LA7.16I',
+	'LC16D',
+	'LS10',
+	'P1',
+])
+export type InfoNameEnum = z.infer<typeof InfoNameEnum>
+
+/* =========================
  * Network / Audio
  * ========================= */
 
 export const NetworkAudioActiveEnum = z.enum(['AVB', 'AES67'])
 export type NetworkAudioActiveEnum = z.infer<typeof NetworkAudioActiveEnum>
 
-export const HdmiIntensityEnum = z.enum(['OFF', 'LOW', 'MEDIUM', 'NORMAL', 'HIGH'])
-export type HdmiIntensityEnum = z.infer<typeof HdmiIntensityEnum>
+/* =========================
+ * HMI
+ * ========================= */
+
+export const HmiIntensityEnum = z.enum(['OFF', 'LOW', 'MEDIUM', 'NORMAL', 'HIGH'])
+export type HmiIntensityEnum = z.infer<typeof HmiIntensityEnum>
+
+export const HmiUnitDelayEnum = z.enum(['MS', 'SAMPLES', 'METERS', 'FEET'])
+export type HmiUnitDelayEnum = z.infer<typeof HmiUnitDelayEnum>
+
+export const HmiUnitTemperatureEnum = z.enum(['CELSIUS', 'FAHRENHEIT'])
+export type HmiUnitTemperatureEnum = z.infer<typeof HmiUnitTemperatureEnum>
 
 /* =========================
  * Bridge Port
@@ -128,8 +157,11 @@ export const ClockSourceStatusEnum = z.enum([
 ])
 export type ClockSourceStatusEnum = z.infer<typeof ClockSourceStatusEnum>
 
-export const ClockSourceTypeEnum = z.enum(['internal', 'avb', 'crf', 'ptp']).or(z.string())
+export const ClockSourceTypeEnum = z.enum(['internal', 'avb', 'crf', 'ptp'])
 export type ClockSourceTypeEnum = z.infer<typeof ClockSourceTypeEnum>
+
+export const LA2xiClockSourceTypeEnum = z.enum(['internal', 'avb', 'ptp'])
+export type LA2xiClockSourceTypeEnum = z.infer<typeof LA2xiClockSourceTypeEnum>
 
 export const MonitorOutputStateEnum = z.enum(['ok', 'protected', 'disabled', 'retry'])
 export type MonitorOutputStateEnum = z.infer<typeof MonitorOutputStateEnum>
@@ -248,3 +280,241 @@ export type Aes67AudioStreamFormatAudioFormatEnum = z.infer<typeof Aes67AudioStr
 
 export const Aes67AudioStreamPacketTimeEnum = z.enum(['1 millisecond', '333 microseconds'])
 export type Aes67AudioStreamPacketTimeEnum = z.infer<typeof Aes67AudioStreamPacketTimeEnum>
+
+/* =========================
+ * AES Input
+ * ========================= */
+
+export const AesInputStatusReportEnum = z.enum(['IDLE', 'ERROR', 'WARNING', 'OK'])
+export type AesInputStatusReportEnum = z.infer<typeof AesInputStatusReportEnum>
+
+export const AesInputStatusErrorEnum = z.enum(['NONE', 'LOCK', 'INTERNAL', 'DATA', 'SIGNAL'])
+export type AesInputStatusErrorEnum = z.infer<typeof AesInputStatusErrorEnum>
+
+export const AesInputStatusWarningEnum = z.enum(['NONE', 'FREQUENCY', 'PHASE'])
+export type AesInputStatusWarningEnum = z.infer<typeof AesInputStatusWarningEnum>
+
+export const AesInputFormatRateEnum = z.enum([
+	'NONE',
+	'INVALID',
+	'32kHz',
+	'44.1kHz',
+	'48kHz',
+	'64kHz',
+	'88.2kHz',
+	'96kHz',
+	'128kHz',
+	'176.4kHz',
+	'192kHz',
+])
+export type AesInputFormatRateEnum = z.infer<typeof AesInputFormatRateEnum>
+
+/* =========================
+ * Input Source
+ * ========================= */
+
+export const InputSourceSelectEnum = z.enum(['xlr', 'network'])
+export type InputSourceSelectEnum = z.infer<typeof InputSourceSelectEnum>
+
+export const InputSourceActiveEnum = InputSourceSelectEnum
+export type InputSourceActiveEnum = z.infer<typeof InputSourceActiveEnum>
+
+export const InputXlrSelectEnum = z.enum(['ana', 'aes'])
+export type InputXlrSelectEnum = z.infer<typeof InputXlrSelectEnum>
+
+export const InputXlrActiveEnum = InputXlrSelectEnum
+export type InputXlrActiveEnum = z.infer<typeof InputXlrActiveEnum>
+
+/* =========================
+ * P1 Input Source Enums
+ * ========================= */
+
+export const InputFallbackAesGroupSourceEnum = z.enum(['ana', 'mic'])
+export type InputFallbackAesGroupSourceEnum = z.infer<typeof InputFallbackAesGroupSourceEnum>
+
+export const InputFallbackAvbGroupSourceEnum = z.enum(['ana', 'mic', 'aes'])
+export type InputFallbackAvbGroupSourceEnum = z.infer<typeof InputFallbackAvbGroupSourceEnum>
+
+export const InputSettingsPolarityEnum = z.enum(['NORMAL', 'INVERTED'])
+export type InputSettingsPolarityEnum = z.infer<typeof InputSettingsPolarityEnum>
+
+export const InputSettingsMicPreampGainEnum = z.enum([
+	'0dB',
+	'3dB',
+	'6dB',
+	'9dB',
+	'12dB',
+	'15dB',
+	'18dB',
+	'21dB',
+	'24dB',
+	'27dB',
+	'30dB',
+	'33dB',
+	'36dB',
+	'39dB',
+	'42dB',
+	'45dB',
+	'48dB',
+	'51dB',
+	'54dB',
+	'57dB',
+	'60dB',
+])
+export type InputSettingsMicPreampGainEnum = z.infer<typeof InputSettingsMicPreampGainEnum>
+
+export const AesOutputFrequencyEnum = z.enum(['96kHz', '48kHz'])
+export type AesOutputFrequencyEnum = z.infer<typeof AesOutputFrequencyEnum>
+
+export const P1GpioInputFunctionLowEnum = z.enum([
+	'none',
+	'mute_set',
+	'mute_clr',
+	'mute_toggle',
+	'load_config_a',
+	'load_config_b',
+	'load_config_next',
+	'load_config_previous',
+])
+export type P1GpioInputFunctionLowEnum = z.infer<typeof P1GpioInputFunctionLowEnum>
+
+export const P1GpioInputFunctionHighEnum = z.enum([
+	'none',
+	'mute_set',
+	'mute_clr',
+	'mute_toggle',
+	'load_config_a',
+	'load_config_b',
+	'load_config_next',
+	'load_config_previous',
+])
+export type P1GpioInputFunctionHighEnum = z.infer<typeof P1GpioInputFunctionHighEnum>
+
+/* =========================
+ * P1 Output Source Enums
+ * ========================= */
+
+export const OutputSettingsAnaMuxEnum = z.enum([
+	'NONE',
+	'ANA_1',
+	'ANA_2',
+	'ANA_3',
+	'ANA_4',
+	'AES_1',
+	'AES_2',
+	'AES_3',
+	'AES_4',
+	'AVB_1',
+	'AVB_2',
+	'AVB_3',
+	'AVB_4',
+	'AVB_5',
+	'AVB_6',
+	'AVB_7',
+	'AVB_8',
+	'MIC_1',
+	'MIC_2',
+	'MIC_3',
+	'MIC_4',
+	'DSP_BUS_1',
+	'DSP_BUS_2',
+	'DSP_BUS_3',
+	'DSP_BUS_4',
+	'DSP_CUE',
+	'DSP_GEN',
+	'DSP_BUS_5',
+	'DSP_BUS_6',
+	'DSP_BUS_7',
+	'DSP_BUS_8',
+	'MPL_L',
+	'MPL_R',
+])
+export type OutputSettingsAnaMuxEnum = z.infer<typeof OutputSettingsAnaMuxEnum>
+
+export const OutputSettingsAesMuxEnum = OutputSettingsAnaMuxEnum
+export type OutputSettingsAesMuxEnum = z.infer<typeof OutputSettingsAesMuxEnum>
+
+export const OutputSettingsAvbMuxEnum = OutputSettingsAnaMuxEnum
+export type OutputSettingsAvbMuxEnum = z.infer<typeof OutputSettingsAvbMuxEnum>
+
+export const OutputSettingsMonMuxEnum = OutputSettingsAnaMuxEnum
+export type OutputSettingsMonMuxEnum = z.infer<typeof OutputSettingsMonMuxEnum>
+
+/* =========================
+ * P1 Sig Gen
+ * ========================= */
+
+export const SiggenTypeEnum = z.enum(['NONE', 'SINE', 'BURST', 'SWEEP', 'NOISE'])
+export type SiggenTypeEnum = z.infer<typeof SiggenTypeEnum>
+
+export const SiggenSweepTimeEnum = z.enum(['0.68', '1.36', '2.73', '5.46'])
+export type SiggenSweepTimeEnum = z.infer<typeof SiggenSweepTimeEnum>
+
+export const SiggenNoiseTypeEnum = z.enum(['WHITE', 'PINK'])
+export type SiggenNoiseTypeEnum = z.infer<typeof SiggenNoiseTypeEnum>
+
+/* =========================
+ * P1 Avb Output
+ * ========================= */
+
+export const AvbOutputAudioStreamFormatTypeEnum = z.enum(['AAF', 'AM824', 'CRF'])
+export type AvbOutputAudioStreamFormatTypeEnum = z.infer<typeof AvbOutputAudioStreamFormatTypeEnum>
+
+export const AvbOutputAudioStreamStatusErrorEnum = z.enum(['NONE', 'RESERVATION'])
+export type AvbOutputAudioStreamStatusErrorEnum = z.infer<typeof AvbOutputAudioStreamStatusErrorEnum>
+
+/* =========================
+ * LS10 Port
+ * ========================= */
+
+export const LS10GpioOutputFunctionEnum = z.enum(['none', 'state', 'fault', 'alive'])
+export type LS10GpioOutputFunctionEnum = z.infer<typeof LS10GpioOutputFunctionEnum>
+
+/* =========================
+ * LC16D GPIO
+ * ========================= */
+export const LC16DGpioInputFunctionLowEnum = z.enum([
+	'none',
+	'load_config_a',
+	'load_config_b',
+	'load_config_next',
+	'load_config_previous',
+])
+export type LC16DGpioInputFunctionLowEnum = z.infer<typeof LC16DGpioInputFunctionLowEnum>
+
+export const LC16DGpioInputFunctionHighEnum = z.enum([
+	'none',
+	'load_config_a',
+	'load_config_b',
+	'load_config_next',
+	'load_config_previous',
+])
+export type LC16DGpioInputFunctionHighEnum = z.infer<typeof LC16DGpioInputFunctionHighEnum>
+
+/* =========================
+ * LC16D Clock
+ * ========================= */
+
+export const LC16DClockSourceTypeEnum = z.enum(['internal', 'avb', 'crf', 'wc', 'madi', 'aes', 'ptp'])
+export type LC16DClockSourceTypeEnum = z.infer<typeof LC16DClockSourceTypeEnum>
+
+export const ClockStatusMadiStatusEnum = z.enum(['invalid', 'lock', 'sync'])
+export type ClockStatusMadiStatusEnum = z.infer<typeof ClockSourceStatusEnum>
+
+export const ClockStatusAesStatusEnum = ClockStatusMadiStatusEnum
+export type ClockStatusAesStatusEnum = z.infer<typeof ClockStatusAesStatusEnum>
+
+export const ClockStatusWcStatusEnum = ClockStatusMadiStatusEnum
+export type ClockStatusWcStatusEnum = z.infer<typeof ClockStatusWcStatusEnum>
+
+export const MadiInputStatusErrorEnum = z.enum(['NONE', 'LOCK', 'INTERNAL', 'CHANNELS', 'RATE'])
+export type MadiInputStatusErrorEnum = z.infer<typeof MadiInputStatusErrorEnum>
+
+export const MadiInputStatusWarningEnum = z.enum(['NONE', 'FREQUENCY', 'PHASE'])
+export type MadiInputStatusWarningEnum = z.infer<typeof MadiInputStatusWarningEnum>
+
+export const MadiInputFormatEnum = z.enum(['NONE', 'INVALID', '96kHz', '48kHz'])
+export type MadiInputFormatEnum = z.infer<typeof MadiInputFormatEnum>
+
+export const MadiOutputFormatEnum = z.enum(['96kHz', '48kHz'])
+export type MadiOutputFormatEnum = z.infer<typeof MadiOutputFormatEnum>

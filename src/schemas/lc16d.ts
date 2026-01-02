@@ -1,10 +1,12 @@
 import * as z from 'zod'
 import * as Schemas from './base.js'
+//import * as Enums from '../enums/enums.js'
 
 export const DeviceSchema = z.object({
 	info: Schemas.InfoSchema.extend({
 		name: z.literal('LC16D'),
 	}),
+	power: Schemas.PowerSchema,
 	/* 	network: Schemas.NetworkSchema,
     avdecc: Schemas.AvdeccSchema,
     hmi: Schemas.HmiSchema.omit({ lock: true, unit: true, option: true }),
@@ -13,7 +15,7 @@ export const DeviceSchema = z.object({
     lldp: Schemas.LldpSchema,
     input: Schemas.InputSchema,
     routing: Schemas.RoutingSchema,
-    power: Schemas.PowerSchema,
+    
     gpio: Schemas.GpioSchema,
     control: Schemas.ControlSchema,
     clock: Schemas.ClockSchema,

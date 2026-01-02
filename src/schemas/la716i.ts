@@ -1,5 +1,6 @@
 import * as z from 'zod'
 import * as Schemas from './base.js'
+//import * as Enums from '../enums/enums.js'
 
 export const DeviceSchema = z.object({
 	info: Schemas.InfoSchema.extend({

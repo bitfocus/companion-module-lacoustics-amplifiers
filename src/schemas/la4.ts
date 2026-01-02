@@ -1,6 +1,6 @@
 import * as z from 'zod'
 import * as Schemas from './base.js'
-//import * as Enums from '../enums/enums.js'
+import * as Enums from '../enums/enums.js'
 
 export const NetworkSchema = z.object({
 	ip: z.object({
@@ -10,8 +10,6 @@ export const NetworkSchema = z.object({
 		select: Schemas.Nullable(z.object({ input: z.object({ primary: Schemas.IpConfigSchema }) })),
 	}),
 })
-
-export type NetworkSchema = z.infer<typeof NetworkSchema>
 
 export const InputSchema = z.object({
 	fallback: z.object({
@@ -28,6 +26,27 @@ export const InputSchema = z.object({
 	}),
 })
 
+export const MonitorOutputErrorSchema = z.object({
+	cross_conduct: Schemas.Bool,
+	dc_warning: Schemas.Bool,
+	channel_error: Schemas.Bool,
+	dc_error: Schemas.Bool,
+})
+
+export const MonitorOutputSchema = Schemas.Index.extend({
+	clip: Schemas.Bool,
+	limit: Schemas.Bool,
+	state: Enums.MonitorOutputStateEnum,
+	temperature_state: Enums.MonitorOutputTemperatureStateEnum,
+	errors: MonitorOutputErrorSchema,
+})
+
+export const MonitorSchema = z.object({
+	error: Enums.MonitorErrorEnum,
+	fuse_protect: Enums.MonitorFuseProtectEnum,
+	output: z.array(MonitorOutputSchema),
+})
+
 export const DeviceSchema = z.object({
 	info: Schemas.InfoSchema.extend({
 		name: z.literal('LA4'),
@@ -36,21 +55,20 @@ export const DeviceSchema = z.object({
 	hmi: Schemas.HmiSchema.omit({ option: true }),
 	lldp: Schemas.LldpSchema,
 	input: InputSchema,
-	//-------------------------
-	/* 	ptp: Schemas.PtpSchema,
-	bridge: Schemas.BridgeSchema,
-
 	routing: Schemas.RoutingSchema,
+	aes: Schemas.AesSchema,
 	power: Schemas.PowerSchema,
-	gpio: Schemas.GpioSchema,
-	control: Schemas.ControlSchema,
-	clock: Schemas.ClockSchema,
-	monitor: Schemas.MonitorSchema,
-	en54: Schemas.En54Schema,
+	configuration: Schemas.ConfigurationSchema,
 	level: Schemas.LevelSchema,
 	layout: Schemas.LayoutSchema,
-	avb: Schemas.AvbSchema,
-	aes67: Schemas.Aes67Schema, */
+	en54: Schemas.En54Schema,
+	monitor: MonitorSchema,
+	control: Schemas.ControlSchema,
 })
 
+export type NetworkSchema = z.infer<typeof NetworkSchema>
+export type InputSchema = z.infer<typeof InputSchema>
+export type MonitorOutputErrorSchema = z.infer<typeof MonitorOutputErrorSchema>
+export type MonitorOutputSchema = z.infer<typeof MonitorOutputSchema>
+export type MonitorSchema = z.infer<typeof MonitorSchema>
 export type DeviceSchema = z.infer<typeof DeviceSchema>

@@ -197,6 +197,26 @@ export const RoutingSchema = z.object({
 	),
 })
 
+export const AesSchema = z.object({
+	input: z.array(
+		Index.extend({
+			status: z.object({
+				clear: Nullable(z.any()),
+				report: Enums.AesInputStatusReportEnum,
+				error: Enums.AesInputStatusErrorEnum,
+				warning: Enums.AesInputStatusWarningEnum,
+			}),
+			format: z.object({
+				rate: Enums.AesInputFormatRateEnum,
+				audio: Bool,
+			}),
+			lock: Bool,
+			frequency: Int.min(0),
+			gain: Int.min(-120).max(120),
+		}),
+	),
+})
+
 export const PowerSchema = z.object({
 	reboot: Nullable(z.any()),
 	standby: Bool,
@@ -596,6 +616,7 @@ export type InputFallbackSchema = z.infer<typeof InputFallbackSchema>
 export type XlrInputSelectSchema = z.infer<typeof XlrInputSelectSchema>
 export type InputSchema = z.infer<typeof InputSchema>
 export type RoutingSchema = z.infer<typeof RoutingSchema>
+export type AesSchema = z.infer<typeof AesSchema>
 export type PowerSchema = z.infer<typeof PowerSchema>
 export type GpioInputSchema = z.infer<typeof GpioInputSchema>
 export type GpioPinSchema = z.infer<typeof GpioPinSchema>

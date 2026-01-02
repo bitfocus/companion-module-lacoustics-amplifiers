@@ -2,7 +2,7 @@ import * as z from 'zod'
 import * as Schemas from './base.js'
 import * as Enums from '../enums/enums.js'
 
-export const LA2xiInputSchema = z.object({
+export const InputSchema = z.object({
 	fallback: z.object({
 		test: Schemas.Nullable(z.any()),
 		aes: Schemas.InputFallbackSchema,
@@ -17,30 +17,6 @@ export const LA2xiInputSchema = z.object({
 		cd: Schemas.XlrInputSelectSchema,
 	}),
 })
-
-export type LA2xiInputSchema = z.infer<typeof LA2xiInputSchema>
-
-export const LA2xiAesSchema = z.object({
-	input: z.array(
-		Schemas.Index.extend({
-			status: z.object({
-				clear: Schemas.Nullable(z.any()),
-				report: Enums.AesInputStatusReportEnum,
-				error: Enums.AesInputStatusErrorEnum,
-				warning: Enums.AesInputStatusWarningEnum,
-			}),
-			format: z.object({
-				rate: Enums.AesInputFormatRateEnum,
-				audio: Schemas.Bool,
-			}),
-			lock: Schemas.Bool,
-			frequency: Schemas.Int.min(0),
-			gain: Schemas.Int.min(-120).max(120),
-		}),
-	),
-})
-
-export type LA2xiAesSchema = z.infer<typeof LA2xiAesSchema>
 
 export const GpioOutputSchema = Schemas.Index.extend({
 	state: Enums.GpioOutputStateEnum,
@@ -72,13 +48,13 @@ export const GpioOutputSchema = Schemas.Index.extend({
 	}),
 })
 
-export const LA2xiGpioSchema = z.object({
+export const GpioSchema = z.object({
 	pin: z.array(Schemas.GpioPinSchema),
 	input: z.array(Schemas.GpioInputSchema),
 	output: z.array(GpioOutputSchema),
 })
 
-export const LA2xiClockSchema = z.object({
+export const ClockSchema = z.object({
 	source: z.object({
 		locked: Schemas.Bool,
 		status: Enums.ClockSourceStatusEnum,
@@ -96,16 +72,16 @@ export const DeviceSchema = z.object({
 	ptp: Schemas.PtpSchema,
 	bridge: Schemas.BridgeSchema,
 	lldp: Schemas.LldpSchema,
-	input: LA2xiInputSchema,
+	input: InputSchema,
 	routing: Schemas.RoutingSchema,
-	aes: LA2xiAesSchema,
+	aes: Schemas.AesSchema,
 	power: Schemas.PowerSchema.extend({
 		status: z.object({
 			inp24v: Schemas.Bool,
 			smps: Schemas.Bool,
 		}),
 	}),
-	gpio: LA2xiGpioSchema,
+	gpio: GpioSchema,
 	configuration: Schemas.ConfigurationSchema,
 	level: Schemas.LevelSchema,
 	layout: Schemas.LayoutSchema,
@@ -117,10 +93,14 @@ export const DeviceSchema = z.object({
 			}),
 		),
 	}),
-	clock: LA2xiClockSchema,
+	clock: ClockSchema,
 	control: Schemas.ControlSchema,
 	avb: Schemas.AvbSchema,
 	aes67: Schemas.Aes67Schema,
 })
 
+export type InputSchema = z.infer<typeof InputSchema>
+export type GpioOutputSchema = z.infer<typeof GpioOutputSchema>
+export type GpioSchema = z.infer<typeof GpioSchema>
+export type ClockSchema = z.infer<typeof ClockSchema>
 export type DeviceSchema = z.infer<typeof DeviceSchema>

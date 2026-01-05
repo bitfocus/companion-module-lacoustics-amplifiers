@@ -46,26 +46,44 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 	}
 
 	get outputChannelCount(): number {
-		return this.#device.control.dsp.output.length
+		if ('control' in this.#device && 'dsp' in this.#device.control) {
+			return this.#device.control.dsp.output.length
+		}
+		return 0
 	}
 
 	get outputChannels(): ControlDspOutputSchema[] {
-		return this.#device.control.dsp.output
+		if ('control' in this.#device && 'dsp' in this.#device.control) {
+			return this.#device.control.dsp.output
+		}
+		return []
 	}
 
 	get outputLevelsCount(): number {
-		return this.#device.level.dsp.output.length
+		if ('level' in this.#device && 'output' in this.#device.level) {
+			return this.#device.level.dsp.output.length
+		}
+		return 0
 	}
 
 	get inputLevelsCount(): number {
-		return this.#device.level.dsp.input.length
+		if ('level' in this.#device && 'input' in this.#device.level) {
+			return this.#device.level.dsp.input.length
+		}
+		return 0
 	}
 
 	get outputLevels(): LevelPeakSchema[] {
-		return this.#device.level.dsp.output
+		if ('level' in this.#device && 'output' in this.#device.level) {
+			return this.#device.level.dsp.output
+		}
+		return []
 	}
 
 	get inputLevels(): LevelPeakSchema[] {
-		return this.#device.level.dsp.input
+		if ('level' in this.#device && 'input' in this.#device.level) {
+			return this.#device.level.dsp.input
+		}
+		return []
 	}
 }

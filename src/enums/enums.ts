@@ -388,7 +388,21 @@ export const P1GpioInputFunctionHighEnum = z.enum([
 	'load_config_next',
 	'load_config_previous',
 ])
+
 export type P1GpioInputFunctionHighEnum = z.infer<typeof P1GpioInputFunctionHighEnum>
+
+export const P1GpioOutputFunctionEnum = z.enum([
+	'none',
+	'state',
+	'power',
+	'alive',
+	'eth_link',
+	'error',
+	'aes_lock',
+	'stream_lock',
+])
+
+export type P1GpioOutputFunctionEnum = z.infer<typeof P1GpioOutputFunctionEnum>
 
 /* =========================
  * P1 Output Source Enums

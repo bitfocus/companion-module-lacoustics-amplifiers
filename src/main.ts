@@ -6,6 +6,7 @@ import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticDevice } from './device.js'
 import { StatusManager } from './status.js'
+import * as Enums from './enums/enums.js'
 import axios, { AxiosInstance, type AxiosResponse } from 'axios'
 import PQueue from 'p-queue'
 import { ZodError } from 'zod'
@@ -17,7 +18,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	#queue = new PQueue({ concurrency: 10, autoStart: true, interval: 50, intervalCap: 1 })
 	#statusManager = new StatusManager(this, { status: InstanceStatus.Connecting, message: 'Connecting' }, 1000)
 	#controller = new AbortController()
-	device!: LacousticDevice
+	device!: LacousticDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
 
 	constructor(internal: unknown) {
@@ -113,7 +114,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		try {
 			const response = await this.clientGet('')
 			this.debug(response.data)
-			this.device = new LacousticDevice(response.data)
+			this.device = LacousticDevice.fromUnknown(response.data)
 			this.checkFeedbacks()
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})

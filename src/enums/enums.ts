@@ -445,6 +445,9 @@ export const OutputSettingsAnaMuxEnum = z.enum([
 ])
 export type OutputSettingsAnaMuxEnum = z.infer<typeof OutputSettingsAnaMuxEnum>
 
+export const OutputSettingsPolarityEnum = InputSettingsPolarityEnum
+export type OutputSettingsPolarityEnum = z.infer<typeof OutputSettingsPolarityEnum>
+
 export const OutputSettingsAesMuxEnum = OutputSettingsAnaMuxEnum
 export type OutputSettingsAesMuxEnum = z.infer<typeof OutputSettingsAesMuxEnum>
 
@@ -460,6 +463,9 @@ export type OutputSettingsMonMuxEnum = z.infer<typeof OutputSettingsMonMuxEnum>
 
 export const SiggenTypeEnum = z.enum(['NONE', 'SINE', 'BURST', 'SWEEP', 'NOISE'])
 export type SiggenTypeEnum = z.infer<typeof SiggenTypeEnum>
+
+export const SiggenSweepTypeEnum = z.enum(['SINGLE', 'REPEAT'])
+export type SiggenSweepTypeEnum = z.infer<typeof SiggenSweepTypeEnum>
 
 export const SiggenSweepTimeEnum = z.enum(['0.68', '1.36', '2.73', '5.46'])
 export type SiggenSweepTimeEnum = z.infer<typeof SiggenSweepTimeEnum>
@@ -506,6 +512,13 @@ export const LC16DGpioInputFunctionHighEnum = z.enum([
 export type LC16DGpioInputFunctionHighEnum = z.infer<typeof LC16DGpioInputFunctionHighEnum>
 
 /* =========================
+ * LC16D Monitor
+ * ========================= */
+
+export const LC16DMonitorErrorEnum = z.enum(['ok', 'reserved', 'init', 'hardware'])
+export type LC16DMonitorErrorEnum = z.infer<typeof LC16DMonitorErrorEnum>
+
+/* =========================
  * LC16D Clock
  * ========================= */
 
@@ -521,6 +534,9 @@ export type ClockStatusAesStatusEnum = z.infer<typeof ClockStatusAesStatusEnum>
 export const ClockStatusWcStatusEnum = ClockStatusMadiStatusEnum
 export type ClockStatusWcStatusEnum = z.infer<typeof ClockStatusWcStatusEnum>
 
+export const MadiInputStatusReportEnum = z.enum(['IDLE', 'ERROR', 'WARNING', 'OK'])
+export type MadiInputStatusReportEnum = z.infer<typeof MadiInputStatusReportEnum>
+
 export const MadiInputStatusErrorEnum = z.enum(['NONE', 'LOCK', 'INTERNAL', 'CHANNELS', 'RATE'])
 export type MadiInputStatusErrorEnum = z.infer<typeof MadiInputStatusErrorEnum>
 
@@ -532,3 +548,6 @@ export type MadiInputFormatEnum = z.infer<typeof MadiInputFormatEnum>
 
 export const MadiOutputFormatEnum = z.enum(['96kHz', '48kHz'])
 export type MadiOutputFormatEnum = z.infer<typeof MadiOutputFormatEnum>
+
+export const ClockSampleRateEnum = MadiOutputFormatEnum
+export type ClockSampleRateEnum = z.infer<typeof ClockSampleRateEnum>

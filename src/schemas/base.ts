@@ -598,6 +598,15 @@ export const Aes67Schema = z.object({
 	}),
 })
 
+export const FanIdSchema = Index.extend({
+	error: Bool,
+	ratio: Num,
+})
+
+export const FanSchema = z.object({
+	fan: z.array(FanIdSchema),
+})
+
 // TYPES
 
 export type Index = z.infer<typeof Index>
@@ -640,3 +649,5 @@ export type LayoutSchema = z.infer<typeof LayoutSchema>
 export type AvbInputMappingSchema = z.infer<typeof AvbInputMappingSchema>
 export type AvbSchema = z.infer<typeof AvbSchema>
 export type Aes67Schema = z.infer<typeof Aes67Schema>
+export type FanIdSchema = z.infer<typeof FanIdSchema>
+export type FanSchema = z.infer<typeof FanSchema>

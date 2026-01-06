@@ -137,13 +137,90 @@ export const LevelSchema = z.object({
 	}),
 })
 
-export const FanIdSchema = Schemas.Index.extend({
-	error: Schemas.Bool,
-	ratio: Schemas.Num,
+export const OutputSettingsAnaSchema = z.object({
+	mux: Enums.OutputSettingsAnaMuxEnum,
+	name: Schemas.Str,
+	mute: Schemas.Bool,
+	polarity: Enums.OutputSettingsPolarityEnum,
+	gain: Schemas.Num.min(-60).max(15),
 })
 
-export const FanSchema = z.object({
-	fan: z.array(FanIdSchema),
+export const OutputSettingsAesSchema = OutputSettingsAnaSchema.extend({
+	mux: Enums.OutputSettingsAesMuxEnum,
+})
+
+export const OutputSettingsAvbSchema = OutputSettingsAnaSchema.extend({
+	mux: Enums.OutputSettingsAvbMuxEnum,
+})
+
+export const OutputSettingsMonSchema = OutputSettingsAnaSchema.extend({
+	mux: Enums.OutputSettingsMonMuxEnum,
+})
+
+export const OutputSchema = z.object({
+	settings: z.object({
+		ana: z.array(OutputSettingsAnaSchema),
+		aes: z.array(OutputSettingsAesSchema),
+		avb: z.array(OutputSettingsAvbSchema),
+		mon: z.array(OutputSettingsMonSchema),
+	}),
+})
+
+export const MplSchema = z.object({
+	enable: Schemas.Bool,
+	playback: z.object({
+		folder_mode: Schemas.Bool,
+		repeat: Schemas.Bool,
+	}),
+	control: z.object({
+		next: z.nullable(z.any()),
+		previous: z.nullable(z.any()),
+		play: Schemas.Bool,
+		mute: Schemas.Bool,
+		gain: Schemas.Num.min(-60).max(15),
+	}),
+	time: z.object({
+		current: Schemas.Int.min(0),
+		total: Schemas.Int.min(0),
+	}),
+	file: z.object({
+		index: Schemas.Int.min(0),
+		count: Schemas.Int.min(0),
+		name: Schemas.Str,
+		path: Schemas.Str,
+		MPL_DISK_NAME: Schemas.Str,
+	}),
+})
+
+export const SiggenSchema = z.object({
+	enable: Schemas.Bool,
+	gain: Schemas.Num,
+	mute: Schemas.Bool,
+	type: Enums.SiggenTypeEnum,
+	time_abort: Schemas.Int.min(0).max(1000),
+	sine: z.object({
+		gain: Schemas.Num,
+		frequency: Schemas.Int.min(0),
+		fade: Schemas.Int.min(0),
+	}),
+	burst: z.object({
+		gain: Schemas.Num,
+		frequency: Schemas.Int.min(0),
+		fade: Schemas.Int.min(0),
+		hold: Schemas.Int.min(0),
+		wait: Schemas.Int.min(0),
+	}),
+	sweep: z.object({
+		type: Enums.SiggenSweepTypeEnum,
+		gain: Schemas.Num,
+		fmin: Schemas.Int.min(0),
+		fmax: Schemas.Int.min(0),
+		time: Enums.SiggenSweepTimeEnum,
+	}),
+	noise: z.object({
+		gain: Schemas.Num,
+		type: Enums.SiggenNoiseTypeEnum,
+	}),
 })
 
 export const DeviceSchema = z.object({
@@ -170,20 +247,26 @@ export const DeviceSchema = z.object({
 	}),
 	level: LevelSchema,
 	clock: Schemas.ClockSchema,
-	fan: FanSchema,
-	/* 	
-    input: Schemas.InputSchema,
-    routing: Schemas.RoutingSchema,
-    
-    gpio: Schemas.GpioSchema,
-    control: Schemas.ControlSchema,
-    clock: Schemas.ClockSchema,
-    monitor: Schemas.MonitorSchema,
-    en54: Schemas.En54Schema,
-    level: Schemas.LevelSchema,
-    layout: Schemas.LayoutSchema,
-    avb: Schemas.AvbSchema,
-    aes67: Schemas.Aes67Schema, */
+	fan: Schemas.FanSchema,
+	output: OutputSchema,
+	mpl: MplSchema,
+	siggen: SiggenSchema,
+	//AVB Schema incomplete
+	avb: Schemas.AvbSchema.extend({
+		output: z.object({
+			//audio_stream: z.array()
+			clock_stream: z.object({
+				format: z.object({ raw: Schemas.Str }),
+				latency: Schemas.Int.min(0).max(2000000),
+				primary: z.object({
+					state: Enums.AvbOutputClockStreamStateEnum,
+				}),
+				secondary: z.object({
+					state: Enums.AvbOutputClockStreamStateEnum,
+				}),
+			}),
+		}),
+	}),
 })
 
 export type InputFallbackAesGroup = z.infer<typeof InputFallbackAesGroup>
@@ -198,6 +281,11 @@ export type GpioInputSchema = z.infer<typeof GpioInputSchema>
 export type GpioOutputSchema = z.infer<typeof GpioOutputSchema>
 export type GpioSchema = z.infer<typeof GpioSchema>
 export type LevelSchema = z.infer<typeof LevelSchema>
-export type FanIdSchema = z.infer<typeof FanIdSchema>
-export type FanSchema = z.infer<typeof FanSchema>
+export type OutputSettingsAnaSchema = z.infer<typeof OutputSettingsAnaSchema>
+export type OutputSettingsAesSchema = z.infer<typeof OutputSettingsAesSchema>
+export type OutputSettingsAvbSchema = z.infer<typeof OutputSettingsAvbSchema>
+export type OutputSettingsMonSchema = z.infer<typeof OutputSettingsMonSchema>
+export type OutputSchema = z.infer<typeof OutputSchema>
+export type MplSchema = z.infer<typeof MplSchema>
+export type SiggenSchema = z.infer<typeof SiggenSchema>
 export type DeviceSchema = z.infer<typeof DeviceSchema>

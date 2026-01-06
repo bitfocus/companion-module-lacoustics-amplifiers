@@ -1,17 +1,6 @@
-import { type ControlDspOutputSchema, type LevelPeakSchema } from './schemas/base.js'
+import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './schemas/base.js'
 import { DeviceSchema, DeviceSchemasByName } from './schemas/index.js'
 import * as Enums from './enums/enums.js'
-/* import * as LA116i from './schemas/la116i.js'
-import * as LA12x from './schemas/la12x.js'
-import * as LA2xi from './schemas/la2xi.js'
-import * as LA4 from './schemas/la4.js'
-import * as LA4x from './schemas/la4x.js'
-import * as LA716 from './schemas/la716.js'
-import * as LA716i from './schemas/la716i.js'
-import * as LA8 from './schemas/la8.js'
-import * as LC16D from './schemas/lc16d.js'
-import * as LS10 from './schemas/ls10.js'
-import * as P1 from './schemas/p1.js' */
 
 export class LacousticDevice<N extends Enums.InfoNameEnum> {
 	#device!: DeviceSchemasByName[N]
@@ -41,47 +30,60 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 		return this.#device.info.name
 	}
 
-	get power(): boolean {
-		return this.#device.power.standby ?? false
+	get info(): InfoSchema {
+		return this.#device.info
 	}
 
-	get outputChannelCount(): number {
+	get powerStandby(): boolean {
+		if ('standby' in this.#device.power) return this.#device.power.standby
+		return false
+	}
+
+	get powerCanStandby(): boolean {
+		return 'standby' in this.#device.power ? true : false
+	}
+
+	get powerRebootable(): boolean {
+		return 'reboot' in this.#device.power ? true : false
+	}
+
+	get outputDspChannelCount(): number {
 		if ('control' in this.#device && 'dsp' in this.#device.control) {
 			return this.#device.control.dsp.output.length
 		}
 		return 0
 	}
 
-	get outputChannels(): ControlDspOutputSchema[] {
+	get outputDspChannels(): ControlDspOutputSchema[] {
 		if ('control' in this.#device && 'dsp' in this.#device.control) {
 			return this.#device.control.dsp.output
 		}
 		return []
 	}
 
-	get outputLevelsCount(): number {
-		if ('level' in this.#device && 'output' in this.#device.level) {
+	get outputDspLevelsCount(): number {
+		if ('level' in this.#device && 'dsp' in this.#device.level) {
 			return this.#device.level.dsp.output.length
 		}
 		return 0
 	}
 
-	get inputLevelsCount(): number {
-		if ('level' in this.#device && 'input' in this.#device.level) {
+	get inputDspLevelsCount(): number {
+		if ('level' in this.#device && 'dsp' in this.#device.level) {
 			return this.#device.level.dsp.input.length
 		}
 		return 0
 	}
 
-	get outputLevels(): LevelPeakSchema[] {
-		if ('level' in this.#device && 'output' in this.#device.level) {
+	get outputDspLevels(): LevelPeakSchema[] {
+		if ('level' in this.#device && 'dsp' in this.#device.level) {
 			return this.#device.level.dsp.output
 		}
 		return []
 	}
 
-	get inputLevels(): LevelPeakSchema[] {
-		if ('level' in this.#device && 'input' in this.#device.level) {
+	get inputDspLevels(): LevelPeakSchema[] {
+		if ('level' in this.#device && 'dsp' in this.#device.level) {
 			return this.#device.level.dsp.input
 		}
 		return []

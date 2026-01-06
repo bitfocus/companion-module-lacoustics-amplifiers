@@ -15,7 +15,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	#config!: ModuleConfig // Setup in init()
 	#secrets!: ModuleSecrets // Setup in init()
 	#client!: AxiosInstance
-	#queue = new PQueue({ concurrency: 10, autoStart: true, interval: 50, intervalCap: 1 })
+	#queue = new PQueue({ concurrency: 10, autoStart: true, interval: 50, intervalCap: 1, strict: true })
 	#statusManager = new StatusManager(this, { status: InstanceStatus.Connecting, message: 'Connecting' }, 1000)
 	#controller = new AbortController()
 	device!: LacousticDevice<Enums.InfoNameEnum>

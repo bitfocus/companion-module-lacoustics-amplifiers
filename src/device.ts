@@ -1,6 +1,7 @@
 import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './schemas/base.js'
 import { DeviceSchemasByName } from './schemas/index.js'
 import * as Enums from './enums/enums.js'
+import { feedbackSubscriptions } from './types.js'
 
 function isValidInfoName(name: unknown): name is Enums.InfoNameEnum {
 	return typeof name === 'string' && name in DeviceSchemasByName
@@ -23,6 +24,37 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 			return new LacousticDevice(device)
 		}
 		throw new Error(`Unsupported device type: ${name}`)
+	}
+
+	static initFeedbackSubscriptionTracker(): feedbackSubscriptions {
+		return {
+			aes: new Set<string>(),
+			aes67: new Set<string>(),
+			avb: new Set<string>(),
+			avdecc: new Set<string>(),
+			bridge: new Set<string>(),
+			clock: new Set<string>(),
+			configuration: new Set<string>(),
+			control: new Set<string>(),
+			en54: new Set<string>(),
+			fan: new Set<string>(),
+			gpio: new Set<string>(),
+			hmi: new Set<string>(),
+			info: new Set<string>(),
+			input: new Set<string>(),
+			layout: new Set<string>(),
+			level: new Set<string>(),
+			lldp: new Set<string>(),
+			madi: new Set<string>(),
+			monitor: new Set<string>(),
+			mpl: new Set<string>(),
+			network: new Set<string>(),
+			output: new Set<string>(),
+			power: new Set<string>(),
+			ptp: new Set<string>(),
+			routing: new Set<string>(),
+			siggen: new Set<string>(),
+		}
 	}
 
 	set device(device: unknown) {

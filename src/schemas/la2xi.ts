@@ -62,6 +62,44 @@ export const ClockSchema = z.object({
 	}),
 })
 
+export const AvbSchema = z.object({
+	input: z.object({
+		mapping: z.array(Schemas.AvbInputMappingSchema),
+
+		audio_stream: z.array(
+			Schemas.Index.extend({
+				format: z.object({
+					raw: Schemas.Str,
+					type: Enums.AvbInputAudioStreamFormatTypeEnum,
+					rate: Enums.AvbInputAudioStreamFormatRateEnum,
+					channels: Schemas.Int.min(0),
+				}),
+				status: Enums.AvbInputAudioStreamStatusEnum,
+				primary: z.object({
+					status: z.object({
+						report: Enums.AvbInputAudioStreamStatusReportEnum,
+						error: Enums.AvbInputAudioStreamStatusErrorEnum,
+						connection_fault: Schemas.Int,
+						reservation_fault: Schemas.Int,
+					}),
+					locked: Schemas.Bool,
+					state: Enums.AvbInputAudioStreamStateEnum,
+				}),
+				secondary: z.object({
+					status: z.object({
+						report: Enums.AvbInputAudioStreamStatusReportEnum,
+						error: Enums.AvbInputAudioStreamStatusErrorEnum,
+						connection_fault: Schemas.Int,
+						reservation_fault: Schemas.Int,
+					}),
+					locked: Schemas.Bool,
+					state: Enums.AvbInputAudioStreamStateEnum,
+				}),
+			}),
+		),
+	}),
+})
+
 export const DeviceSchema = z.object({
 	info: Schemas.InfoSchema.extend({
 		name: z.literal('LA2Xi'),
@@ -85,7 +123,7 @@ export const DeviceSchema = z.object({
 	configuration: Schemas.ConfigurationSchema,
 	level: Schemas.LevelSchema,
 	layout: Schemas.LayoutSchema,
-	en54: Schemas.En54Schema,
+	en54: Schemas.En54Schema.omit({ stream: true }),
 	monitor: Schemas.MonitorSchema.omit({ fuse_protect: true }).extend({
 		output: z.array(
 			Schemas.MonitorOutputSchema.omit({
@@ -95,7 +133,7 @@ export const DeviceSchema = z.object({
 	}),
 	clock: ClockSchema,
 	control: Schemas.ControlSchema,
-	avb: Schemas.AvbSchema,
+	avb: AvbSchema,
 	aes67: Schemas.Aes67Schema,
 })
 
@@ -103,4 +141,5 @@ export type InputSchema = z.infer<typeof InputSchema>
 export type GpioOutputSchema = z.infer<typeof GpioOutputSchema>
 export type GpioSchema = z.infer<typeof GpioSchema>
 export type ClockSchema = z.infer<typeof ClockSchema>
+export type AvbSchema = z.infer<typeof AvbSchema>
 export type DeviceSchema = z.infer<typeof DeviceSchema>

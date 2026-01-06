@@ -7,7 +7,7 @@ import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticDevice } from './device.js'
 import { StatusManager } from './status.js'
 import * as Enums from './enums/enums.js'
-import { feedbackSubscriptions, feedbackSubscriptionKeys } from './types.js'
+import { feedbackSubscriptionKeys } from './types.js'
 import axios, { AxiosInstance, type AxiosResponse, AxiosError } from 'axios'
 import PQueue from 'p-queue'
 import { ZodError } from 'zod'
@@ -21,30 +21,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	#controller = new AbortController()
 	device!: LacousticDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
-	feedbackSubscriptions: feedbackSubscriptions = {
-		aes: new Set<string>(),
-		aes67: new Set<string>(),
-		avb: new Set<string>(),
-		avdecc: new Set<string>(),
-		bridge: new Set<string>(),
-		clock: new Set<string>(),
-		configuration: new Set<string>(),
-		control: new Set<string>(),
-		en54: new Set<string>(),
-		fan: new Set<string>(),
-		gpio: new Set<string>(),
-		hmi: new Set<string>(),
-		info: new Set<string>(),
-		input: new Set<string>(),
-		layout: new Set<string>(),
-		level: new Set<string>(),
-		lldp: new Set<string>(),
-		monitor: new Set<string>(),
-		network: new Set<string>(),
-		power: new Set<string>(),
-		ptp: new Set<string>(),
-		routing: new Set<string>(),
-	}
+	feedbackSubscriptions = LacousticDevice.initFeedbackSubscriptionTracker()
 
 	constructor(internal: unknown) {
 		super(internal)

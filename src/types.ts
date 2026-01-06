@@ -16,11 +16,15 @@ export const feedbackSubscriptionKeys = [
 	'layout',
 	'level',
 	'lldp',
+	'madi',
 	'monitor',
+	'mpl',
 	'network',
+	'output',
 	'power',
 	'ptp',
 	'routing',
+	'siggen',
 ] as const
 
 export type FeedbackSubscriptionKey = (typeof feedbackSubscriptionKeys)[number]

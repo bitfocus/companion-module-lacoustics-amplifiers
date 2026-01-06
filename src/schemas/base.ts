@@ -1,7 +1,7 @@
 import * as z from 'zod'
 import * as Enums from '../enums/enums.js'
 
-const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Faf]{2})|([0-9A-Fa-f]{4}\.){2}([0-9A-Fa-f]{4})$/
+const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})|([0-9A-Fa-f]{4}\.){2}([0-9A-Fa-f]{4})$/
 
 export const Nullable = <T extends z.ZodTypeAny>(schema: T): z.ZodNullable<T> => schema.nullable()
 
@@ -25,7 +25,7 @@ export const InfoSchema = z.object({
 	mac: Str.regex(macRegex, 'Invalid MAC address format'),
 	unit_name: Str,
 	unit_name_auto: Bool,
-	datetime: Str, // ISO string
+	datetime: Str,
 })
 
 export const IpConfigSchema = z.object({

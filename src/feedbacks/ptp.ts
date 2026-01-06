@@ -13,8 +13,39 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 				return instance.device.ptpV2Domain
 			},
 		}
+		feedbacks.ptpGmId = {
+			name: 'PTP - Grandmaster ID',
+			type: 'value',
+			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
+			callback: (feedback, _context) => {
+				return feedback.options.useSec ? instance.device.ptpGmIdSec : instance.device.ptpGmIdPri
+			},
+		}
+		feedbacks.ptpPri1 = {
+			name: 'PTP - Priority 1',
+			type: 'value',
+			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
+			callback: (feedback, _context) => {
+				return feedback.options.useSec ? instance.device.ptpPriority1Sec : instance.device.ptpPriority1Pri
+			},
+		}
+		feedbacks.ptpPri2 = {
+			name: 'PTP - Priority 2',
+			type: 'value',
+			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
+			callback: (feedback, _context) => {
+				return feedback.options.useSec ? instance.device.ptpPriority2Sec : instance.device.ptpPriority2Pri
+			},
+		}
+		feedbacks.ptpPathLength = {
+			name: 'PTP - Path Length',
+			type: 'value',
+			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
+			callback: (feedback, _context) => {
+				return feedback.options.useSec ? instance.device.ptpPathLengthSec : instance.device.ptpPathLengthPri
+			},
+		}
 	}
-
 	Object.keys(feedbacks).forEach((key) => {
 		feedbacks[key].subscribe = feedbackSubscribe(instance, 'ptp')
 		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'ptp')

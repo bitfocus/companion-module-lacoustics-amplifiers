@@ -1,4 +1,6 @@
-import { combineRgb } from '@companion-module/base'
+import { combineRgb, CompanionFeedbackContext, CompanionFeedbackInfo } from '@companion-module/base'
+import { ModuleInstance } from '../main.js'
+import { FeedbackSubscriptionKey } from '../types.js'
 
 export const colors = {
 	red: combineRgb(255, 0, 0),
@@ -16,3 +18,15 @@ export const styles = {
 		color: colors.black,
 	},
 }
+
+export const feedbackSubscribe =
+	(instance: ModuleInstance, type: FeedbackSubscriptionKey) =>
+	(feedback: CompanionFeedbackInfo, _context: CompanionFeedbackContext): void => {
+		instance.feedbackSubscriptions[type].add(feedback.id)
+	}
+
+export const feedbackUnsubscribe =
+	(instance: ModuleInstance, type: FeedbackSubscriptionKey) =>
+	(feedback: CompanionFeedbackInfo, _context: CompanionFeedbackContext): void => {
+		instance.feedbackSubscriptions[type].delete(feedback.id)
+	}

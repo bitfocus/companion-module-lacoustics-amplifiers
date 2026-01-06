@@ -47,6 +47,28 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 		return 'reboot' in this.#device.power ? true : false
 	}
 
+	get powerSmpsStatus(): boolean[] {
+		const SmpsStatus: boolean[] = []
+		if ('status' in this.#device.power && 'smps' in this.#device.power.status) {
+			if (typeof this.#device.power.status.smps == 'boolean') return [this.#device.power.status.smps]
+			if (Array.isArray(this.#device.power.status.smps)) {
+				this.#device.power.status.smps.forEach((psu) => SmpsStatus.push(psu.state))
+			}
+		}
+		return SmpsStatus
+	}
+
+	get powerSmpsCount(): number {
+		let PsuCount = 0
+		if ('status' in this.#device.power && 'smps' in this.#device.power.status) {
+			if (typeof this.#device.power.status.smps == 'boolean') PsuCount = 1
+			if (Array.isArray(this.#device.power.status.smps)) {
+				PsuCount = this.#device.power.status.smps.length
+			}
+		}
+		return PsuCount
+	}
+
 	get outputDspChannelCount(): number {
 		if ('control' in this.#device && 'dsp' in this.#device.control) {
 			return this.#device.control.dsp.output.length

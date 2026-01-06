@@ -1,7 +1,7 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
 import type { ModuleInstance } from '../main.js'
 import { ChannelOption } from '../options.js'
-import { styles } from './consts.js'
+import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
 
 export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
 	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
@@ -14,6 +14,8 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].mute
 			},
+			subscribe: feedbackSubscribe(instance, 'control'),
+			unsubscribe: feedbackUnsubscribe(instance, 'control'),
 		}
 		feedbacks.dspOutputPolarity = {
 			name: 'Output - Polarity',
@@ -23,6 +25,8 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].invert
 			},
+			subscribe: feedbackSubscribe(instance, 'control'),
+			unsubscribe: feedbackUnsubscribe(instance, 'control'),
 		}
 		feedbacks.dspOutputDelay = {
 			name: 'Output - Delay',
@@ -31,6 +35,8 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].delay
 			},
+			subscribe: feedbackSubscribe(instance, 'control'),
+			unsubscribe: feedbackUnsubscribe(instance, 'control'),
 		}
 		feedbacks.dspOutputGain = {
 			name: 'Output - Gain',
@@ -39,6 +45,8 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].gain
 			},
+			subscribe: feedbackSubscribe(instance, 'control'),
+			unsubscribe: feedbackUnsubscribe(instance, 'control'),
 		}
 	}
 	return feedbacks

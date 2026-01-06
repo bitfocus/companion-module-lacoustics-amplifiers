@@ -7,6 +7,7 @@ import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticDevice } from './device.js'
 import { StatusManager } from './status.js'
 import * as Enums from './enums/enums.js'
+import { feedbackSubscriptions, feedbackSubscriptionKeys } from './types.js'
 import axios, { AxiosInstance, type AxiosResponse } from 'axios'
 import PQueue from 'p-queue'
 import { ZodError } from 'zod'
@@ -20,6 +21,29 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	#controller = new AbortController()
 	device!: LacousticDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
+	feedbackSubscriptions: feedbackSubscriptions = {
+		aes: new Set<string>(),
+		aes67: new Set<string>(),
+		avb: new Set<string>(),
+		avdecc: new Set<string>(),
+		bridge: new Set<string>(),
+		clock: new Set<string>(),
+		configuration: new Set<string>(),
+		control: new Set<string>(),
+		en54: new Set<string>(),
+		fan: new Set<string>(),
+		gpio: new Set<string>(),
+		hmi: new Set<string>(),
+		input: new Set<string>(),
+		layout: new Set<string>(),
+		level: new Set<string>(),
+		lldp: new Set<string>(),
+		monitor: new Set<string>(),
+		network: new Set<string>(),
+		power: new Set<string>(),
+		ptp: new Set<string>(),
+		routing: new Set<string>(),
+	}
 
 	constructor(internal: unknown) {
 		super(internal)
@@ -126,15 +150,19 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	}
 
 	private async pollDevice(): Promise<void> {
-		try {
-			const response = await this.clientGet('')
-			this.debug(response.data)
-			this.device.device = response.data
-			this.checkFeedbacks()
-		} catch (err) {
-			this.log('warn', 'Polling error')
-			this.handleError(err)
+		for (const key of feedbackSubscriptionKeys) {
+			if (this.feedbackSubscriptions[key].size == 0) continue
+			try {
+				const response = await this.clientGet('')
+				this.debug(response.data)
+				this.device.devicePartial = response.data
+				this.checkFeedbacksById(...this.feedbackSubscriptions[key])
+			} catch (err) {
+				this.log('warn', 'Polling error')
+				this.handleError(err)
+			}
 		}
+
 		this.#pollTimer = setTimeout(() => {
 			this.pollDevice().catch(() => {})
 		}, this.#config.interval ?? 1000)

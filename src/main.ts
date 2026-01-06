@@ -8,7 +8,7 @@ import { LacousticDevice } from './device.js'
 import { StatusManager } from './status.js'
 import * as Enums from './enums/enums.js'
 import { feedbackSubscriptions, feedbackSubscriptionKeys } from './types.js'
-import axios, { AxiosInstance, type AxiosResponse } from 'axios'
+import axios, { AxiosInstance, type AxiosResponse, AxiosError } from 'axios'
 import PQueue from 'p-queue'
 import { ZodError } from 'zod'
 
@@ -171,32 +171,153 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		}, this.#config.interval ?? 1000)
 	}
 
-	// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-	public handleError(err: any): void {
+	public handleError(err: unknown): void {
 		if (axios.isAxiosError(err)) {
-			// Access specific AxiosError properties
-			this.debug(err)
-			if (err.response) {
-				// 1. The server responded with a status code outside 2xx (e.g., 404, 500)
-				this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
-				this.log('error', `Status: ${err.response.status}`)
-				this.log('error', `Data: ${err.response.data}`)
-			} else if (err.request) {
-				// 2. The request was made but no response was received (e.g., network timeout)
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', `Network Error / No Response: ${err.request}`)
-			} else {
-				// 3. Something happened while setting up the request
-				this.#statusManager.updateStatus(InstanceStatus.UnknownError)
-				this.log('error', `Setup Error: ${err.message}`)
-			}
+			this.#handleAxiosError(err)
 		} else if (err instanceof ZodError) {
-			this.debug(err)
-			this.log('warn', `Invalid data returned: \n${JSON.stringify(err.issues)}`)
+			this.#handleZodError(err)
 		} else {
-			// Non-Axios error (e.g., syntax error in your code)
+			this.#handleUnknownError(err)
+		}
+	}
+
+	#handleAxiosError(err: AxiosError): void {
+		this.debug(err)
+
+		if (err.response) {
+			// Server responded with error status (4xx, 5xx)
+			this.#handleHttpError(err)
+		} else if (err.request) {
+			// Request sent but no response received (network/timeout issues)
+			this.#handleNetworkError(err)
+		} else {
+			// Error during request setup
 			this.#statusManager.updateStatus(InstanceStatus.UnknownError)
-			this.log('error', `Unknown Error: ${err}`)
+			this.log('error', `Request setup error: ${err.message}`)
+		}
+	}
+
+	#handleHttpError(err: AxiosError): void {
+		const status = err.response?.status
+
+		// Set status based on HTTP response code
+		if (status && status >= 500) {
+			this.#statusManager.updateStatus(InstanceStatus.UnknownError)
+			this.log('error', `Server error ${status}: ${err.message}`)
+		} else if (status === 401 || status === 403) {
+			this.#statusManager.updateStatus(InstanceStatus.AuthenticationFailure)
+			this.log('error', `Authentication error ${status}: Check credentials`)
+		} else if (status === 404) {
+			this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
+			this.log('error', `Not found ${status}: Endpoint may have changed`)
+		} else if (status === 429) {
+			this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
+			this.log('error', `Rate limited ${status}: Too many requests`)
+		} else {
+			this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
+			this.log('error', `HTTP ${status}: ${err.message}`)
+		}
+
+		// Log response data if useful
+		if (err.response?.data && typeof err.response.data === 'string') {
+			this.log('error', `Response: ${err.response.data}`)
+		}
+	}
+
+	#handleNetworkError(err: AxiosError): void {
+		const code = err.code
+
+		switch (code) {
+			case 'ECONNREFUSED':
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', 'Connection refused: Device may be offline or unreachable')
+				break
+
+			case 'ETIMEDOUT':
+			case 'ECONNABORTED':
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', `Request timed out: Device not responding (${code})`)
+				break
+
+			case 'ENOTFOUND':
+			case 'EAI_AGAIN':
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', `DNS resolution failed: Cannot find device hostname (${code})`)
+				break
+
+			case 'ENETUNREACH':
+			case 'EHOSTUNREACH':
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', `Network unreachable: Check network connectivity (${code})`)
+				break
+
+			case 'ECONNRESET':
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', 'Connection reset: Device closed connection unexpectedly')
+				break
+
+			case 'EPIPE':
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', 'Broken pipe: Connection lost during transmission')
+				break
+
+			case 'ECANCELED':
+				// Request was cancelled (e.g., by AbortController)
+				this.log('warn', 'Request cancelled')
+				// Don't change status for cancellations
+				break
+
+			case 'ERR_NETWORK':
+				// Generic network error (often seen in browsers)
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', 'Network error: Check device connection')
+				break
+
+			case 'ERR_BAD_REQUEST':
+				// Request was malformed
+				this.#statusManager.updateStatus(InstanceStatus.UnknownError)
+				this.log('error', `Bad request: ${err.message}`)
+				break
+
+			case 'ERR_BAD_RESPONSE':
+				// Response was malformed
+				this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
+				this.log('error', `Invalid response from device: ${err.message}`)
+				break
+
+			default:
+				// Unknown network error
+				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
+				this.log('error', `Network error${code ? ` (${code})` : ''}: ${err.message}`)
+				break
+		}
+
+		// Additional context
+		if (err.config?.url) {
+			this.log('debug', `Failed URL: ${err.config.url}`)
+		}
+	}
+
+	#handleZodError(err: ZodError): void {
+		this.debug(err)
+
+		// Format Zod errors more readably
+		const formattedErrors = err.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n  ')
+
+		this.log('warn', `Invalid data returned:\n  ${formattedErrors}`)
+	}
+
+	#handleUnknownError(err: unknown): void {
+		this.#statusManager.updateStatus(InstanceStatus.UnknownError)
+
+		// Safely stringify unknown errors
+		const errorMessage = err instanceof Error ? err.message : String(err)
+
+		this.log('error', `Unknown error: ${errorMessage}`)
+
+		// Log stack trace if available
+		if (err instanceof Error && err.stack) {
+			this.debug(err.stack)
 		}
 	}
 

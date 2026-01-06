@@ -33,7 +33,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 				},
 			],
 			callback: (feedback, _context) => {
-				return instance.device.powerSmpsStatus[Number(feedback.options.psu ?? 1) - 1]
+				return instance.device.powerSmpsStatus[Number(feedback.options.psu ?? 1)]
 			},
 		}
 	}

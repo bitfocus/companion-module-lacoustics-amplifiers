@@ -91,12 +91,14 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 		return 'reboot' in this.#device.power ? true : false
 	}
 
-	get powerSmpsStatus(): boolean[] {
-		const SmpsStatus: boolean[] = []
+	get powerSmpsStatus(): Record<number, boolean> {
+		const SmpsStatus: Record<number, boolean> = {}
 		if ('status' in this.#device.power && 'smps' in this.#device.power.status) {
-			if (typeof this.#device.power.status.smps == 'boolean') return [this.#device.power.status.smps]
-			if (Array.isArray(this.#device.power.status.smps)) {
-				this.#device.power.status.smps.forEach((psu) => SmpsStatus.push(psu.state))
+			if (typeof this.#device.power.status.smps == 'boolean') SmpsStatus[1] = this.#device.power.status.smps
+			else if (Array.isArray(this.#device.power.status.smps)) {
+				this.#device.power.status.smps.forEach((psu) => {
+					SmpsStatus[psu.index] = psu.state
+				})
 			}
 		}
 		return SmpsStatus

@@ -1,6 +1,10 @@
 import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './schemas/base.js'
-import { DeviceSchema, DeviceSchemasByName } from './schemas/index.js'
+import { DeviceSchemasByName } from './schemas/index.js'
 import * as Enums from './enums/enums.js'
+
+function isValidInfoName(name: unknown): name is Enums.InfoNameEnum {
+	return typeof name === 'string' && name in DeviceSchemasByName
+}
 
 export class LacousticDevice<N extends Enums.InfoNameEnum> {
 	#device!: DeviceSchemasByName[N]
@@ -9,9 +13,16 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 		this.#device = device
 	}
 
-	static fromUnknown(device: unknown): LacousticDevice<Enums.InfoNameEnum> {
-		const parsed = DeviceSchema.parse(device)
-		return new LacousticDevice(parsed)
+	static fromUnknown(data: unknown): LacousticDevice<Enums.InfoNameEnum> {
+		if (typeof data == 'string') data = JSON.parse(data)
+		if (typeof data !== 'object') throw new Error('Can not initialize device, unknown data type')
+		const name = (data as any)?.info?.name
+		if (isValidInfoName(name)) {
+			const device = DeviceSchemasByName[name].parse(data)
+			//const parsed = DeviceSchema.parse(data)
+			return new LacousticDevice(device)
+		}
+		throw new Error(`Unsupported device type: ${name}`)
 	}
 
 	set device(device: unknown) {

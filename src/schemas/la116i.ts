@@ -5,7 +5,7 @@ import * as LA716i from './la716i.js'
 
 export const DeviceSchema = LA716i.DeviceSchema.extend({
 	info: Schemas.InfoSchema.extend({
-		name: z.literal('LA1.16I'),
+		name: z.literal('LA1.16i'),
 	}),
 })
 

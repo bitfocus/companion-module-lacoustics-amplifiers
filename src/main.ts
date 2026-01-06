@@ -1,6 +1,6 @@
 import { InstanceBase, runEntrypoint, InstanceStatus, SomeCompanionConfigField } from '@companion-module/base'
 import { GetConfigFields, type ModuleConfig, type ModuleSecrets } from './config.js'
-import { UpdateVariableDefinitions } from './variables.js'
+import { UpdateVariableDefinitions, UpdateVariableValues } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
@@ -34,6 +34,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		fan: new Set<string>(),
 		gpio: new Set<string>(),
 		hmi: new Set<string>(),
+		info: new Set<string>(),
 		input: new Set<string>(),
 		layout: new Set<string>(),
 		level: new Set<string>(),
@@ -77,6 +78,8 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 			this.updateActions() // export actions
 			this.updateFeedbacks() // export feedbacks
 			this.updateVariableDefinitions() // export variable definitions
+			this.feedbackSubscriptions.info.add('var')
+			this.updateVariableValues()
 		} else {
 			this.#statusManager.updateStatus(InstanceStatus.BadConfig, 'No Host Configured')
 			return
@@ -139,7 +142,6 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 			const response = await this.clientGet('')
 			this.debug(response.data)
 			this.device = LacousticDevice.fromUnknown(response.data)
-			this.checkFeedbacks()
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})
 			}, this.#config.interval ?? 1000)
@@ -153,16 +155,17 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		for (const key of feedbackSubscriptionKeys) {
 			if (this.feedbackSubscriptions[key].size == 0) continue
 			try {
-				const response = await this.clientGet('')
+				const response = await this.clientGet(key)
 				this.debug(response.data)
-				this.device.devicePartial = response.data
-				this.checkFeedbacksById(...this.feedbackSubscriptions[key])
+				const data = { [key]: response.data }
+				this.device.devicePartial = data
+				this.checkFeedbacksById(...[...this.feedbackSubscriptions[key]].filter((id) => id !== 'var'))
 			} catch (err) {
 				this.log('warn', 'Polling error')
 				this.handleError(err)
 			}
 		}
-
+		this.updateVariableValues()
 		this.#pollTimer = setTimeout(() => {
 			this.pollDevice().catch(() => {})
 		}, this.#config.interval ?? 1000)
@@ -222,6 +225,10 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 
 	updateVariableDefinitions(): void {
 		UpdateVariableDefinitions(this)
+	}
+
+	updateVariableValues(): void {
+		UpdateVariableValues(this)
 	}
 }
 

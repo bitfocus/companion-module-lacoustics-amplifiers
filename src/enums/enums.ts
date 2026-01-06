@@ -5,14 +5,14 @@ import { z } from 'zod'
  * ========================= */
 
 export const InfoNameEnum = z.enum([
-	'LA1.16I',
+	'LA1.16i',
 	'LA12X',
-	'LA2XI',
+	'LA2Xi',
 	'LA4',
 	'LA4X',
 	'LA8',
 	'LA7.16',
-	'LA7.16I',
+	'LA7.16i',
 	'LC16D',
 	'LS10',
 	'P1',

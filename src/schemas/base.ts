@@ -29,9 +29,9 @@ export const InfoSchema = z.object({
 })
 
 export const IpConfigSchema = z.object({
-	address: z.ipv4(),
-	netmask: z.ipv4(),
-	gateway: z.ipv4(),
+	address: Str, //z.ipv4(),
+	netmask: Str, //z.ipv4(),
+	gateway: Str, //z.ipv4(),
 })
 
 export const NetworkSchema = z.object({
@@ -128,7 +128,7 @@ export const LldpSchema = z.object({
 	port: z.array(
 		z.object({
 			chassis_id: Str,
-			ip: z.ipv4,
+			ip: Str, //z.ipv4,
 			system_desc: Str,
 			port_desc: Str,
 		}),
@@ -361,7 +361,7 @@ export const ErrorsSchema = z.object({
 })
 
 export const En54SigGenBandSchema = z.object({
-	frequency: Int.min(10).max(2200),
+	frequency: Int.min(10).max(22000),
 	gain: Num.min(-120).max(-26),
 	time: Int.min(100).max(5000),
 	ramp: Int.min(10).max(1000),
@@ -408,7 +408,7 @@ export const En54Schema = z.object({
 	),
 
 	pilot_tone: z.object({
-		frequency: Int.min(10).max(2200),
+		frequency: Int.min(10).max(22000),
 		threshold: Int.min(-1200).max(0),
 		resolution: Int.min(10).max(1000),
 	}),
@@ -445,11 +445,13 @@ export const ConfigurationSchema = z.object({
 	load: z.number().nullable(),
 	clear: z.number().nullable(),
 	clear_all: z.any().nullable(),
-	// eslint-disable-next-line @typescript-eslint/unbound-method
-	store: z.object({
-		index: Int.min(1).max(10),
-		name: Str.min(0).max(16),
-	}).nullable,
+
+	store: z
+		.object({
+			index: Int.min(1).max(10),
+			name: Str.min(0).max(16),
+		})
+		.nullable(),
 	active: z.object({
 		index: Int.min(0).max(10),
 	}),
@@ -571,7 +573,7 @@ export const Aes67Schema = z.object({
 				cmd: Enums.Aes67AudioStreamCmdEnum,
 				status: Enums.Aes67AudioStreamStatusEnum,
 				primary: z.object({
-					ip_dest: z.ipv4,
+					ip_dest: Str, //z.ipv4,
 					port_dest: Int.min(0).max(65535),
 					status: z.object({
 						report: Enums.Aes67AudioStreamStatusReportEnum,
@@ -579,7 +581,7 @@ export const Aes67Schema = z.object({
 					}),
 				}),
 				secondary: z.object({
-					ip_dest: z.ipv4,
+					ip_dest: Str, //z.ipv4,
 					port_dest: Int,
 					status: z.object({
 						report: Enums.Aes67AudioStreamStatusReportEnum,

@@ -64,7 +64,7 @@ export const ClockSchema = z.object({
 
 export const DeviceSchema = z.object({
 	info: Schemas.InfoSchema.extend({
-		name: z.literal('LA2XI'),
+		name: z.literal('LA2Xi'),
 	}),
 	network: Schemas.NetworkSchema,
 	avdecc: Schemas.AvdeccSchema,

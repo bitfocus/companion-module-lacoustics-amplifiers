@@ -4,7 +4,7 @@ import * as Schemas from './base.js'
 
 export const DeviceSchema = z.object({
 	info: Schemas.InfoSchema.extend({
-		name: z.literal('LA7.16I'),
+		name: z.literal('LA7.16i'),
 	}),
 	network: Schemas.NetworkSchema,
 	avdecc: Schemas.AvdeccSchema,
@@ -18,7 +18,7 @@ export const DeviceSchema = z.object({
 	gpio: Schemas.GpioSchema,
 	control: Schemas.ControlSchema,
 	clock: Schemas.ClockSchema,
-	monitor: Schemas.MonitorSchema,
+	monitor: Schemas.MonitorSchema.omit({ fuse_protect: true }),
 	en54: Schemas.En54Schema,
 	level: Schemas.LevelSchema,
 	layout: Schemas.LayoutSchema,

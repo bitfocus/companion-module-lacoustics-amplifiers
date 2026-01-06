@@ -11,6 +11,7 @@ export const feedbackSubscriptionKeys = [
 	'fan',
 	'gpio',
 	'hmi',
+	'info',
 	'input',
 	'layout',
 	'level',

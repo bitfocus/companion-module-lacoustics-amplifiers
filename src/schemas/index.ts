@@ -27,13 +27,13 @@ import * as P1 from './p1.js'
 ]) */
 
 export const DeviceSchemasByName = {
-	'LA1.16I': LA116i.DeviceSchema,
+	'LA1.16i': LA116i.DeviceSchema,
 	LA12X: LA12x.DeviceSchema,
-	LA2XI: LA2xi.DeviceSchema,
+	LA2Xi: LA2xi.DeviceSchema,
 	LA4: LA4.DeviceSchema,
 	LA4X: LA4x.DeviceSchema,
 	'LA7.16': LA716.DeviceSchema,
-	'LA7.16I': LA716i.DeviceSchema,
+	'LA7.16i': LA716i.DeviceSchema,
 	LA8: LA8.DeviceSchema,
 	LC16D: LC16D.DeviceSchema,
 	LS10: LS10.DeviceSchema,
@@ -60,7 +60,7 @@ export type DeviceSchemasByName = {
 }
 export type InfoNameEnum = keyof typeof DeviceSchemasByName
 
-export const DeviceSchema = z.discriminatedUnion('info.name', deviceSchemaList)
+export const DeviceSchema = z.union(deviceSchemaList)
 
 type TupleNames = z.infer<(typeof deviceSchemaList)[number]>['info']['name']
 

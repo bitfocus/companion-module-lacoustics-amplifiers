@@ -1,5 +1,6 @@
 import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './schemas/base.js'
 import { DeviceSchemasByName } from './schemas/index.js'
+//import * as Schemas from './schemas/base.js'
 import * as Enums from './enums/enums.js'
 import { feedbackSubscriptions } from './types.js'
 
@@ -112,6 +113,39 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 		return PsuCount
 	}
 
+	get powerHas24vIn(): boolean {
+		return 'status' in this.#device.power && 'inp24v' in this.#device.power.status
+	}
+
+	get power24vIn(): boolean {
+		if ('status' in this.#device.power && 'inp24v' in this.#device.power.status) {
+			return this.#device.power.status.inp24v
+		}
+		return false
+	}
+
+	get powerHas24vOut(): boolean {
+		return 'status' in this.#device.power && 'out24v' in this.#device.power.status
+	}
+
+	get power24vOut(): boolean {
+		if ('status' in this.#device.power && 'out24v' in this.#device.power.status) {
+			return this.#device.power.status.out24v
+		}
+		return false
+	}
+
+	get powerHasMains(): boolean {
+		return 'status' in this.#device.power && 'mains' in this.#device.power.status
+	}
+
+	get powerMains(): boolean {
+		if ('status' in this.#device.power && 'mains' in this.#device.power.status) {
+			return this.#device.power.status.mains
+		}
+		return false
+	}
+
 	get outputDspChannelCount(): number {
 		if ('control' in this.#device && 'dsp' in this.#device.control) {
 			return this.#device.control.dsp.output.length
@@ -152,5 +186,45 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 			return this.#device.level.dsp.input
 		}
 		return []
+	}
+
+	get avdeccSupported(): boolean {
+		return 'avdecc' in this.#device
+	}
+
+	get avdeccLock(): boolean {
+		return 'avdecc' in this.#device ? this.#device.avdecc.lock : false
+	}
+
+	get avdeccEntityId(): string {
+		return 'avdecc' in this.#device ? this.#device.avdecc.entity_id : ''
+	}
+
+	get clockSupported(): boolean {
+		return 'clock' in this.#device
+	}
+
+	get clockLocked(): boolean {
+		return 'clock' in this.#device ? this.#device.clock.source.locked : false
+	}
+
+	get clockStatus(): string {
+		return 'clock' in this.#device ? this.#device.clock.source.status : ''
+	}
+
+	get clockType(): string {
+		return 'clock' in this.#device ? this.#device.clock.source.type : ''
+	}
+
+	get ptpSupported(): boolean {
+		return 'ptp' in this.#device
+	}
+
+	get ptpSecondarySupported(): boolean {
+		return 'ptp' in this.#device && 'secondary' in this.#device.ptp
+	}
+
+	get ptpV2Domain(): number {
+		return 'ptp' in this.#device ? this.#device.ptp.ptpv2_domain : 0
 	}
 }

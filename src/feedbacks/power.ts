@@ -13,9 +13,9 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			callback: (_feedback, _context) => {
 				return instance.device.powerStandby
 			},
-			subscribe: feedbackSubscribe(instance, 'power'),
-			unsubscribe: feedbackUnsubscribe(instance, 'power'),
 		}
+	}
+	if (instance.device.powerSmpsCount > 0) {
 		feedbacks.powerSmpsStatus = {
 			name: 'Power - SMPS Status',
 			type: 'boolean',
@@ -35,9 +35,44 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			callback: (feedback, _context) => {
 				return instance.device.powerSmpsStatus[Number(feedback.options.psu ?? 1) - 1]
 			},
-			subscribe: feedbackSubscribe(instance, 'power'),
-			unsubscribe: feedbackUnsubscribe(instance, 'power'),
 		}
 	}
+	if (instance.device.powerHas24vIn) {
+		feedbacks.power24vIn = {
+			name: 'Power - 24V In',
+			type: 'boolean',
+			defaultStyle: styles.blackOnRed,
+			options: [],
+			callback: (_feedback, _context) => {
+				return instance.device.power24vIn
+			},
+		}
+	}
+	if (instance.device.powerHas24vOut) {
+		feedbacks.power24vOut = {
+			name: 'Power - 24V Out',
+			type: 'boolean',
+			defaultStyle: styles.blackOnRed,
+			options: [],
+			callback: (_feedback, _context) => {
+				return instance.device.power24vOut
+			},
+		}
+	}
+	if (instance.device.powerHasMains) {
+		feedbacks.power24vOut = {
+			name: 'Power - Mains',
+			type: 'boolean',
+			defaultStyle: styles.blackOnRed,
+			options: [],
+			callback: (_feedback, _context) => {
+				return instance.device.powerMains
+			},
+		}
+	}
+	Object.keys(feedbacks).forEach((key) => {
+		feedbacks[key].subscribe = feedbackSubscribe(instance, 'power')
+		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'power')
+	})
 	return feedbacks
 }

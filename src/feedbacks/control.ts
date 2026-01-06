@@ -7,47 +7,51 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
 	if (instance.device.outputDspChannelCount > 0) {
 		feedbacks.dspOutputMute = {
-			name: 'Output - Mute',
+			name: 'DSP Output - Mute',
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].mute
 			},
-			subscribe: feedbackSubscribe(instance, 'control'),
-			unsubscribe: feedbackUnsubscribe(instance, 'control'),
 		}
 		feedbacks.dspOutputPolarity = {
-			name: 'Output - Polarity',
+			name: 'DSP Output - Polarity',
 			type: 'boolean',
 			defaultStyle: styles.blackOnAmber,
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].invert
 			},
-			subscribe: feedbackSubscribe(instance, 'control'),
-			unsubscribe: feedbackUnsubscribe(instance, 'control'),
 		}
 		feedbacks.dspOutputDelay = {
-			name: 'Output - Delay',
+			name: 'DSP Output - Delay',
 			type: 'value',
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].delay
 			},
-			subscribe: feedbackSubscribe(instance, 'control'),
-			unsubscribe: feedbackUnsubscribe(instance, 'control'),
 		}
 		feedbacks.dspOutputGain = {
-			name: 'Output - Gain',
+			name: 'DSP Output - Gain',
 			type: 'value',
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].gain
 			},
-			subscribe: feedbackSubscribe(instance, 'control'),
-			unsubscribe: feedbackUnsubscribe(instance, 'control'),
+		}
+		feedbacks.dspOutputVolume = {
+			name: 'DSP Output - Gain',
+			type: 'value',
+			options: [ChannelOption(instance.device.outputDspChannelCount)],
+			callback: (feedback, _context) => {
+				return instance.device.outputDspChannels[Number(feedback.options.channel) - 1].volume
+			},
 		}
 	}
+	Object.keys(feedbacks).forEach((key) => {
+		feedbacks[key].subscribe = feedbackSubscribe(instance, 'control')
+		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'control')
+	})
 	return feedbacks
 }

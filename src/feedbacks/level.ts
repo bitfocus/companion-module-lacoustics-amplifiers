@@ -13,8 +13,6 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			callback: (feedback, _context) => {
 				return instance.device.outputDspLevels[Number(feedback.options.channel) - 1].peak
 			},
-			subscribe: feedbackSubscribe(instance, 'level'),
-			unsubscribe: feedbackUnsubscribe(instance, 'level'),
 		}
 	}
 	if (instance.device.inputDspLevelsCount > 0) {
@@ -25,9 +23,11 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			callback: (feedback, _context) => {
 				return instance.device.inputDspLevels[Number(feedback.options.channel) - 1].peak
 			},
-			subscribe: feedbackSubscribe(instance, 'level'),
-			unsubscribe: feedbackUnsubscribe(instance, 'level'),
 		}
 	}
+	Object.keys(feedbacks).forEach((key) => {
+		feedbacks[key].subscribe = feedbackSubscribe(instance, 'level')
+		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'level')
+	})
 	return feedbacks
 }

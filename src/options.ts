@@ -1,14 +1,12 @@
-import type { CompanionInputFieldNumber } from '@companion-module/base'
+import type { CompanionInputFieldTextInput } from '@companion-module/base'
 
-export const ChannelOption = (maxChan: number): CompanionInputFieldNumber => {
+export const ChannelOption = (maxChan: number): CompanionInputFieldTextInput => {
 	return {
-		type: 'number',
+		type: 'textinput',
 		id: 'channel',
 		label: 'Channel',
-		default: 1,
-		min: 1,
-		max: maxChan,
-		range: true,
-		step: 1,
+		default: '1',
+		useVariables: { local: true },
+		description: `Channel number (1-${maxChan})`,
 	}
 }

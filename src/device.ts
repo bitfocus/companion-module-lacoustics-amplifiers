@@ -1,6 +1,6 @@
 import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './schemas/base.js'
 import { DeviceSchemasByName } from './schemas/index.js'
-//import * as Schemas from './schemas/base.js'
+import * as Schemas from './schemas/base.js'
 import * as Enums from './enums/enums.js'
 import { feedbackSubscriptions } from './types.js'
 
@@ -91,7 +91,7 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 		return 'reboot' in this.#device.power ? true : false
 	}
 
-	get powerSmpsStatus(): Record<number, boolean> {
+	get powerSmpsStatus(): Readonly<Record<number, boolean>> {
 		const SmpsStatus: Record<number, boolean> = {}
 		if ('status' in this.#device.power && 'smps' in this.#device.power.status) {
 			if (typeof this.#device.power.status.smps == 'boolean') SmpsStatus[1] = this.#device.power.status.smps
@@ -227,31 +227,18 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 	}
 
 	get ptpV2Domain(): number {
-		return 'ptp' in this.#device ? this.#device.ptp.ptpv2_domain : 0
-	}
-	get ptpGmIdPri(): string {
-		return 'ptp' in this.#device ? this.#device.ptp.primary.gm_id : ''
+		return 'ptp' in this.#device ? this.#device.ptp.ptpv2_domain : -1
 	}
 
-	get ptpPriority1Pri(): number {
-		return 'ptp' in this.#device ? this.#device.ptp.primary.priority1 : 0
+	get ptpPrimary(): Readonly<Schemas.PtpClockSchema> {
+		return 'ptp' in this.#device
+			? this.#device.ptp.primary
+			: { gm_id: '', priority1: -1, priority2: -1, as_path_length: 0 }
 	}
-	get ptpPriority2Pri(): number {
-		return 'ptp' in this.#device ? this.#device.ptp.primary.priority2 : 0
-	}
-	get ptpPathLengthPri(): number {
-		return 'ptp' in this.#device ? this.#device.ptp.primary.as_path_length : 0
-	}
-	get ptpGmIdSec(): string {
-		return 'ptp' in this.#device && 'secondary' in this.#device.ptp ? this.#device.ptp.secondary.gm_id : ''
-	}
-	get ptpPriority1Sec(): number {
-		return 'ptp' in this.#device && 'secondary' in this.#device.ptp ? this.#device.ptp.secondary.priority1 : 0
-	}
-	get ptpPriority2Sec(): number {
-		return 'ptp' in this.#device && 'secondary' in this.#device.ptp ? this.#device.ptp.secondary.priority2 : 0
-	}
-	get ptpPathLengthSec(): number {
-		return 'ptp' in this.#device && 'secondary' in this.#device.ptp ? this.#device.ptp.secondary.as_path_length : 0
+
+	get ptpSecondary(): Readonly<Schemas.PtpClockSchema> {
+		return 'ptp' in this.#device && 'secondary' in this.#device.ptp
+			? this.#device.ptp.secondary
+			: { gm_id: '', priority1: -1, priority2: -1, as_path_length: 0 }
 	}
 }

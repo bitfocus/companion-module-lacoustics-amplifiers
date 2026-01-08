@@ -1,6 +1,7 @@
 import type { CompanionActionDefinition, CompanionActionDefinitions } from '@companion-module/base'
 import type { ModuleInstance } from '../main.js'
 import { ChannelOption } from '../options.js'
+import { intRangeLimiter } from '../utils.js'
 
 export function getControlActions(instance: ModuleInstance): CompanionActionDefinitions {
 	const actions: Record<string, CompanionActionDefinition> = {}
@@ -22,6 +23,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				},
 			],
 			callback: async (event) => {
+				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
 				let newState = false
 				switch (event.options.state?.toString()) {
 					case 'mute':
@@ -31,13 +33,13 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 						newState = false
 						break
 					case 'toggle':
-						newState = !instance.device.outputDspChannels[Number(event.options.channel) - 1].mute
+						newState = !instance.device.outputDspChannels[channelNum - 1].mute
 				}
 				try {
-					await instance.clientPost(`/control/dsp/output/${event.options.channel}/mute`, newState)
-					instance.log('info', `Channel ${event.options.channel} Mute ${newState ? 'on' : 'off'}`)
+					await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
+					instance.log('info', `Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
 				} catch (err) {
-					instance.log('warn', `Channel ${event.options.channel} Mute failed`)
+					instance.log('warn', `Channel ${channelNum} Mute failed`)
 					instance.handleError(err)
 				}
 			},
@@ -59,6 +61,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				},
 			],
 			callback: async (event) => {
+				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
 				let newState = false
 				switch (event.options.state?.toString()) {
 					case 'invert':
@@ -68,13 +71,13 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 						newState = false
 						break
 					case 'toggle':
-						newState = !instance.device.outputDspChannels[Number(event.options.channel)].invert
+						newState = !instance.device.outputDspChannels[channelNum - 1].invert
 				}
 				try {
-					await instance.clientPost(`/control/dsp/output/${event.options.channel}/invert`, newState)
-					instance.log('info', `Channel ${event.options.channel} Polarity ${newState ? 'inverted' : 'normal'}`)
+					await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
+					instance.log('info', `Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)
 				} catch (err) {
-					instance.log('warn', `Channel ${event.options.channel} Polarity Invert failed`)
+					instance.log('warn', `Channel ${channelNum} Polarity Invert failed`)
 					instance.handleError(err)
 				}
 			},
@@ -94,13 +97,14 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				},
 			],
 			callback: async (event) => {
+				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
 				const delay = Math.round(Number(event.options.delay))
 
 				try {
-					await instance.clientPost(`/control/dsp/output/${event.options.channel}/delay`, delay)
-					instance.log('info', `Channel ${event.options.channel} delay ${delay} samples`)
+					await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
+					instance.log('info', `Channel ${channelNum} delay ${delay} samples`)
 				} catch (err) {
-					instance.log('warn', `Channel ${event.options.channel} Delay set failed`)
+					instance.log('warn', `Channel ${channelNum} Delay set failed`)
 					instance.handleError(err)
 				}
 			},
@@ -137,9 +141,10 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				}
 			},
 			learn: async (event) => {
+				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
 				return {
 					...event.options,
-					gain: instance.device.outputDspChannels[Number(event.options.channel) - 1].gain,
+					gain: instance.device.outputDspChannels[channelNum - 1].gain,
 				}
 			},
 		}

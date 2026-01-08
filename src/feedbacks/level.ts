@@ -2,6 +2,7 @@ import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '
 import type { ModuleInstance } from '../main.js'
 import { ChannelOption } from '../options.js'
 import { feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { intRangeLimiter } from '../utils.js'
 
 export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
 	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
@@ -11,7 +12,8 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'value',
 			options: [ChannelOption(instance.device.outputDspLevelsCount)],
 			callback: (feedback, _context) => {
-				return instance.device.outputDspLevels[Number(feedback.options.channel) - 1].peak
+				const channelNum = intRangeLimiter(String(feedback.options.channel), 1, instance.device.outputDspChannelCount)
+				return instance.device.outputDspLevels[channelNum - 1].peak
 			},
 		}
 	}
@@ -21,7 +23,8 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'value',
 			options: [ChannelOption(instance.device.inputDspLevelsCount)],
 			callback: (feedback, _context) => {
-				return instance.device.inputDspLevels[Number(feedback.options.channel) - 1].peak
+				const channelNum = intRangeLimiter(String(feedback.options.channel), 1, instance.device.inputDspLevelsCount)
+				return instance.device.inputDspLevels[channelNum - 1].peak
 			},
 		}
 	}

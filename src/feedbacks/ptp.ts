@@ -1,6 +1,7 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
 import type { ModuleInstance } from '../main.js'
 import { feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { isKeyOf } from '../utils.js'
 
 export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
 	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
@@ -13,37 +14,53 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 				return instance.device.ptpV2Domain
 			},
 		}
-		feedbacks.ptpGmId = {
-			name: 'PTP - Grandmaster ID',
+		feedbacks.ptpPrimary = {
+			name: 'PTP - Primary',
 			type: 'value',
-			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
+			options: [
+				{
+					id: 'prop',
+					type: 'dropdown',
+					label: 'property',
+					default: 'gm_id',
+					choices: [
+						{ id: 'gm_id', label: 'GM ID' },
+						{ id: 'priority1', label: 'Priority 1' },
+						{ id: 'priority2', label: 'Priority 2' },
+						{ id: 'as_path_length', label: 'Path Length' },
+					],
+				},
+			],
 			callback: (feedback, _context) => {
-				return feedback.options.useSec ? instance.device.ptpGmIdSec : instance.device.ptpGmIdPri
+				const prop = feedback.options.prop?.toString() || ''
+				if (isKeyOf(instance.device.ptpPrimary, prop)) return instance.device.ptpPrimary[prop]
+				return null
 			},
 		}
-		feedbacks.ptpPri1 = {
-			name: 'PTP - Priority 1',
-			type: 'value',
-			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
-			callback: (feedback, _context) => {
-				return feedback.options.useSec ? instance.device.ptpPriority1Sec : instance.device.ptpPriority1Pri
-			},
-		}
-		feedbacks.ptpPri2 = {
-			name: 'PTP - Priority 2',
-			type: 'value',
-			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
-			callback: (feedback, _context) => {
-				return feedback.options.useSec ? instance.device.ptpPriority2Sec : instance.device.ptpPriority2Pri
-			},
-		}
-		feedbacks.ptpPathLength = {
-			name: 'PTP - Path Length',
-			type: 'value',
-			options: [{ id: 'useSec', type: 'checkbox', label: 'Secondary Port', default: false }],
-			callback: (feedback, _context) => {
-				return feedback.options.useSec ? instance.device.ptpPathLengthSec : instance.device.ptpPathLengthPri
-			},
+		if (instance.device.ptpSecondarySupported) {
+			feedbacks.ptpSecondary = {
+				name: 'PTP - Secondary',
+				type: 'value',
+				options: [
+					{
+						id: 'prop',
+						type: 'dropdown',
+						label: 'property',
+						default: 'gm_id',
+						choices: [
+							{ id: 'gm_id', label: 'GM ID' },
+							{ id: 'priority1', label: 'Priority 1' },
+							{ id: 'priority2', label: 'Priority 2' },
+							{ id: 'as_path_length', label: 'Path Length' },
+						],
+					},
+				],
+				callback: (feedback, _context) => {
+					const prop = feedback.options.prop?.toString() || ''
+					if (isKeyOf(instance.device.ptpSecondary, prop)) return instance.device.ptpSecondary[prop]
+					return null
+				},
+			}
 		}
 	}
 	Object.keys(feedbacks).forEach((key) => {

@@ -11,6 +11,7 @@ import { feedbackSubscriptionKeys } from './types.js'
 import axios, { AxiosInstance, type AxiosResponse, AxiosError } from 'axios'
 import PQueue from 'p-queue'
 import { ZodError } from 'zod'
+import { throttle } from 'es-toolkit'
 
 export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	#config!: ModuleConfig // Setup in init()
@@ -22,7 +23,7 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 	device!: LacousticDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
 	feedbackSubscriptions = LacousticDevice.initFeedbackSubscriptionTracker()
-
+	#feedbacksToUpdate: Set<string> = new Set()
 	constructor(internal: unknown) {
 		super(internal)
 	}
@@ -136,7 +137,12 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 				this.debug(response.data)
 				const data = { [key]: response.data }
 				this.device.devicePartial = data
-				this.checkFeedbacksById(...[...this.feedbackSubscriptions[key]].filter((id) => id !== 'var'))
+				this.feedbackSubscriptions[key].forEach((id) => {
+					if (id !== 'var') {
+						this.#feedbacksToUpdate.add(id)
+					}
+				})
+				this.throttledCheckFeedbacksById()
 			} catch (err) {
 				this.log('warn', 'Polling error')
 				this.handleError(err)
@@ -307,6 +313,16 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 			}
 		}
 	}
+
+	throttledCheckFeedbacksById = throttle(
+		() => {
+			if (this.#feedbacksToUpdate.size === 0) return
+			this.checkFeedbacksById(...Array.from(this.#feedbacksToUpdate))
+			this.#feedbacksToUpdate.clear()
+		},
+		50,
+		{ edges: ['leading', 'trailing'], signal: this.#controller.signal },
+	)
 
 	// Return config fields for web config
 	getConfigFields(): SomeCompanionConfigField[] {

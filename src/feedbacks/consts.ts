@@ -5,6 +5,10 @@ import { FeedbackSubscriptionKey } from '../types.js'
 export const colors = {
 	red: combineRgb(255, 0, 0),
 	black: combineRgb(0, 0, 0),
+	white: combineRgb(255, 255, 255),
+	green: combineRgb(0, 204, 0),
+	greenBright: combineRgb(0, 255, 0),
+	yellow: combineRgb(255, 255, 0),
 	amber: combineRgb(255, 191, 0),
 }
 

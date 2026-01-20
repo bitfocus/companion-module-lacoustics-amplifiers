@@ -8,7 +8,7 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
 	if (instance.device.outputDspLevelsCount > 0) {
 		feedbacks.levelsDspOutput = {
-			name: 'Levels - Dsp Output',
+			name: 'Levels - DSP Output',
 			type: 'value',
 			options: [ChannelOption(instance.device.outputDspLevelsCount)],
 			callback: (feedback, _context) => {
@@ -19,7 +19,7 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 	}
 	if (instance.device.inputDspLevelsCount > 0) {
 		feedbacks.levelsDspInput = {
-			name: 'Levels - Dsp Input',
+			name: 'Levels - DSP Input',
 			type: 'value',
 			options: [ChannelOption(instance.device.inputDspLevelsCount)],
 			callback: (feedback, _context) => {

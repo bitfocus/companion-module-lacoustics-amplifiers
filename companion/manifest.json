@@ -1,5 +1,7 @@
 {
+	"$schema": "../node_modules/@companion-module/base/assets/manifest.schema.json",
 	"id": "lacoustics-amplifiers",
+	"type": "connection",
 	"name": "lacoustics-amplifiers",
 	"shortname": "L'A amplifiers",
 	"description": "Control L'Acoustics amplifiers via their HTTP Rest API.",

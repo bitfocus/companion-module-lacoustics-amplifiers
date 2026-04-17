@@ -12,7 +12,7 @@ export interface Status {
  * Only calls update Status if status has actually changed, with a configurable debounce
  * @param self InstanceBase from which to call updateStatus
  * @param initStatus Status to be set on init
- * @param debounceTimeout Debounce interval in mS to be applied after a status update
+ * @param throttleTimeout Throttle rate for status updates
  *
  */
 
@@ -20,9 +20,9 @@ export class StatusManager {
 	#currentStatus: Status = { status: InstanceStatus.Disconnected, message: '' }
 	#newStatus: Status = { status: InstanceStatus.Disconnected, message: '' }
 	#parentInstance!: InstanceBase<ModuleConfig, ModuleSecrets>
-	private debounceTimer: NodeJS.Timeout | undefined
 	#throttleTimeout: number = 1000
 	#isDestroyed: boolean = false
+	private setNewStatus!: ((newStatus?: Status) => void) & { flush: () => void }
 
 	constructor(
 		self: InstanceBase<ModuleConfig, ModuleSecrets>,
@@ -30,8 +30,30 @@ export class StatusManager {
 		throttleTimeout: number = 2000,
 	) {
 		this.#parentInstance = self
-		this.setNewStatus(initStatus)
 		this.#throttleTimeout = throttleTimeout
+
+		/**
+		 * Perform the status update
+		 * @param newStatus
+		 *
+		 */
+
+		this.setNewStatus = throttle(
+			(newStatus: Status = this.#newStatus) => {
+				if (newStatus.message === null || typeof newStatus.message !== 'object') {
+					this.#parentInstance.updateStatus(newStatus.status, newStatus.message)
+				} else {
+					this.#parentInstance.updateStatus(newStatus.status, JSON.stringify(newStatus.message))
+				}
+				this.#currentStatus = newStatus
+			},
+			this.#throttleTimeout,
+			{
+				edges: ['trailing'],
+			},
+		)
+
+		this.setNewStatus(initStatus)
 	}
 
 	/**
@@ -62,32 +84,8 @@ export class StatusManager {
 		}
 		if (this.#currentStatus.status === newStatus && this.#currentStatus.message === newMsg) return
 		this.#newStatus = { status: newStatus, message: newMsg }
-		if (this.debounceTimer) {
-			return
-		}
 		this.setNewStatus(this.#newStatus)
 	}
-
-	/**
-	 * Perform the status update
-	 * @param newStatus
-	 *
-	 */
-
-	private setNewStatus = throttle(
-		(newStatus: Status = this.#newStatus) => {
-			if (typeof newStatus.message === 'object') {
-				this.#parentInstance.updateStatus(newStatus.status, JSON.stringify(newStatus.message))
-			} else {
-				this.#parentInstance.updateStatus(newStatus.status, newStatus.message)
-			}
-			this.#currentStatus = newStatus
-		},
-		this.#throttleTimeout,
-		{
-			edges: ['trailing'],
-		},
-	)
 
 	/**
 	 * Clears any running debounce timer, sets status to disconnected

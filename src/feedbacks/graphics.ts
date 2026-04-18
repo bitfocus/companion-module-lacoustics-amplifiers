@@ -3,8 +3,9 @@ import {
 	type CompanionFeedbackDefinitions,
 	type CompanionInputFieldNumber,
 	type CompanionInputFieldDropdown,
+	CompanionAdvancedFeedbackDefinition,
 } from '@companion-module/base'
-import type { ModuleInstance } from '../main.js'
+import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
 import { colors, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
@@ -31,7 +32,9 @@ const paddingOption = {
 	min: 0,
 	max: 72,
 	default: 1,
-	required: true,
+	range: true,
+	step: 1,
+	asInteger: true,
 } as const satisfies CompanionInputFieldNumber
 
 const offsetOption = {
@@ -42,7 +45,9 @@ const offsetOption = {
 	min: 0,
 	max: 20,
 	default: 5,
-	required: true,
+	range: true,
+	step: 1,
+	asInteger: true,
 } as const satisfies CompanionInputFieldNumber
 
 const valueToPercent = (value: number, min = 0, max = 100, invert = false): number => {
@@ -100,7 +105,7 @@ const createLevelMeterFeedback = (
 	name: string,
 	channelCount: number,
 	getLevelValue: (channelNum: number) => number | undefined,
-): CompanionFeedbackDefinition => ({
+): CompanionAdvancedFeedbackDefinition => ({
 	name,
 	type: 'advanced',
 	options: [
@@ -115,6 +120,7 @@ const createLevelMeterFeedback = (
 			default: 6,
 			min: 1,
 			max: 20,
+			asInteger: true,
 		},
 		{
 			type: 'number',
@@ -122,11 +128,13 @@ const createLevelMeterFeedback = (
 			id: 'min',
 			default: -100,
 			description: 'Value less than or equal to this will result in no metering',
-			min: -0xffff,
-			max: 0xffff,
+			min: -0xff,
+			max: 0xff,
+			asInteger: true,
 		},
 	],
 	callback: async (feedback, _context) => {
+		feedbackSubscribe(instance, 'level')
 		if (!('image' in feedback) || feedback.image === undefined) {
 			instance.log('warn', `Feedback ${feedback.id} does not support images}`)
 			return {}
@@ -135,7 +143,7 @@ const createLevelMeterFeedback = (
 		const opt = feedback.options
 		const min = Number(opt.min)
 		const max = 0
-		const channelNum = intRangeLimiter(String(opt.channel), 1, channelCount)
+		const channelNum = intRangeLimiter(opt.channel as number, 1, channelCount)
 		const value = getLevelValue(channelNum - 1)
 
 		if (Number.isNaN(value) || value === undefined) throw new Error('Value is a NaN/Undefined')
@@ -143,7 +151,7 @@ const createLevelMeterFeedback = (
 			throw new Error(`Invalid min/max choices for level-meter.\n${JSON.stringify(opt)}`)
 		}
 
-		const position = opt.position?.toString() ?? 'right'
+		const position = (opt.position as string) ?? 'right'
 		const padding = Number(opt.padding)
 		const offset = Number(opt.offset)
 		const width = Number(opt.width ?? 6)
@@ -179,7 +187,7 @@ const createLevelMeterFeedback = (
 
 		instance.debug(`Feedback: ${JSON.stringify(feedback)}\n Bar Options: ${JSON.stringify(options)}`)
 		return {
-			imageBuffer: graphics.bar(options),
+			imageBuffer: Buffer.from(graphics.bar(options)).toString('base64'),
 		}
 	},
 })
@@ -206,7 +214,6 @@ export function getGraphicFeedbacks(instance: ModuleInstance): CompanionFeedback
 	}
 
 	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].subscribe = feedbackSubscribe(instance, 'level')
 		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'level')
 	})
 

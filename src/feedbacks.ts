@@ -1,5 +1,4 @@
-import type { CompanionFeedbackDefinition } from '@companion-module/base'
-import type { ModuleInstance } from './main.js'
+import type ModuleInstance from './main.js'
 import { getAvdeccFeedbacks } from './feedbacks/avdecc.js'
 import { getClockFeedbacks } from './feedbacks/clock.js'
 import { getControlFeedbacks } from './feedbacks/control.js'
@@ -9,7 +8,7 @@ import { getPowerFeedbacks } from './feedbacks/power.js'
 import { getPtpFeedbacks } from './feedbacks/ptp.js'
 
 export function UpdateFeedbacks(self: ModuleInstance): void {
-	const feedbacks: Record<string, CompanionFeedbackDefinition | undefined> = {
+	const feedbacks = {
 		...getAvdeccFeedbacks(self),
 		...getClockFeedbacks(self),
 		...getControlFeedbacks(self),

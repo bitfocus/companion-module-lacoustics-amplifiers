@@ -1,6 +1,6 @@
 import { Regex, type SomeCompanionConfigField } from '@companion-module/base'
 
-export interface ModuleConfig {
+export type ModuleConfig = {
 	host: string
 	auth: boolean
 	username: string
@@ -8,7 +8,7 @@ export interface ModuleConfig {
 	verbose: boolean
 }
 
-export interface ModuleSecrets {
+export type ModuleSecrets = {
 	password: string
 }
 

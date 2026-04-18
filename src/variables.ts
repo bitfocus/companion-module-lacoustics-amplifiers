@@ -1,5 +1,5 @@
-import { CompanionVariableDefinition, CompanionVariableValues } from '@companion-module/base'
-import type { ModuleInstance } from './main.js'
+import { CompanionVariableDefinitions, CompanionVariableValues } from '@companion-module/base'
+import type ModuleInstance from './main.js'
 
 const sanitiseVariableId = (id: string, substitute = '_'): string => id.replaceAll(/[^a-zA-Z0-9-_.]/gm, substitute)
 const formatVariableNames = (str: string): string => {
@@ -7,9 +7,9 @@ const formatVariableNames = (str: string): string => {
 }
 
 export function UpdateVariableDefinitions(self: ModuleInstance): void {
-	const varDefs: CompanionVariableDefinition[] = []
+	const varDefs: CompanionVariableDefinitions = {}
 	Object.keys(self.device.info).forEach((key) => {
-		varDefs.push({ variableId: sanitiseVariableId(key), name: formatVariableNames(key) })
+		varDefs[sanitiseVariableId(key)] = { name: formatVariableNames(key) }
 	})
 	self.setVariableDefinitions(varDefs)
 }

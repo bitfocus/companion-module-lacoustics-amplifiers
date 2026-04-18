@@ -1,5 +1,5 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
-import type { ModuleInstance } from '../main.js'
+import type ModuleInstance from '../main.js'
 import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
 
 export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
@@ -11,6 +11,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			defaultStyle: styles.blackOnRed,
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'power')
 				return instance.device.powerStandby
 			},
 		}
@@ -33,6 +34,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 				},
 			],
 			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'power')
 				return instance.device.powerSmpsStatus[Number(feedback.options.psu ?? 1)]
 			},
 		}
@@ -44,6 +46,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			defaultStyle: styles.blackOnRed,
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'power')
 				return instance.device.power24vIn
 			},
 		}
@@ -55,6 +58,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			defaultStyle: styles.blackOnRed,
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'power')
 				return instance.device.power24vOut
 			},
 		}
@@ -66,12 +70,12 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			defaultStyle: styles.blackOnRed,
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'power')
 				return instance.device.powerMains
 			},
 		}
 	}
 	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].subscribe = feedbackSubscribe(instance, 'power')
 		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'power')
 	})
 	return feedbacks

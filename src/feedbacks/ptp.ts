@@ -1,5 +1,5 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
-import type { ModuleInstance } from '../main.js'
+import type ModuleInstance from '../main.js'
 import { feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
 import { isKeyOf } from '../utils.js'
 
@@ -11,6 +11,7 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 			type: 'value',
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'ptp')
 				return instance.device.ptpV2Domain
 			},
 		}
@@ -32,7 +33,8 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 				},
 			],
 			callback: (feedback, _context) => {
-				const prop = feedback.options.prop?.toString() || ''
+				feedbackSubscribe(instance, 'ptp')
+				const prop = (feedback.options.prop as string) || 'gm_id'
 				if (isKeyOf(instance.device.ptpPrimary, prop)) return instance.device.ptpPrimary[prop]
 				return null
 			},
@@ -56,7 +58,8 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 					},
 				],
 				callback: (feedback, _context) => {
-					const prop = feedback.options.prop?.toString() || ''
+					feedbackSubscribe(instance, 'ptp')
+					const prop = (feedback.options.prop as string) || 'gm_id'
 					if (isKeyOf(instance.device.ptpSecondary, prop)) return instance.device.ptpSecondary[prop]
 					return null
 				},
@@ -64,7 +67,6 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 		}
 	}
 	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].subscribe = feedbackSubscribe(instance, 'ptp')
 		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'ptp')
 	})
 	return feedbacks

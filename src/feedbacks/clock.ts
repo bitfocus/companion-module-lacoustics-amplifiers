@@ -1,5 +1,5 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
-import type { ModuleInstance } from '../main.js'
+import type ModuleInstance from '../main.js'
 import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
 
 export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
@@ -11,6 +11,7 @@ export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			defaultStyle: styles.blackOnRed,
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'clock')
 				return instance.device.clockLocked
 			},
 		}
@@ -19,6 +20,7 @@ export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'value',
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'clock')
 				return instance.device.clockStatus
 			},
 		}
@@ -27,13 +29,13 @@ export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'value',
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'clock')
 				return instance.device.clockType
 			},
 		}
 	}
 
 	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].subscribe = feedbackSubscribe(instance, 'clock')
 		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'clock')
 	})
 	return feedbacks

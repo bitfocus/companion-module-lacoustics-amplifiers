@@ -1,5 +1,5 @@
 import { combineRgb, CompanionFeedbackContext, CompanionFeedbackInfo } from '@companion-module/base'
-import { ModuleInstance } from '../main.js'
+import ModuleInstance from '../main.js'
 import { FeedbackSubscriptionKey } from '../types.js'
 
 export const colors = {

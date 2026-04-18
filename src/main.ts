@@ -1,4 +1,4 @@
-import { InstanceBase, runEntrypoint, InstanceStatus, SomeCompanionConfigField } from '@companion-module/base'
+import { InstanceBase, InstanceStatus, SomeCompanionConfigField } from '@companion-module/base'
 import { GetConfigFields, type ModuleConfig, type ModuleSecrets } from './config.js'
 import { UpdateVariableDefinitions, UpdateVariableValues } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
@@ -7,13 +7,15 @@ import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticDevice } from './device.js'
 import { StatusManager } from './status.js'
 import * as Enums from './enums/enums.js'
-import { feedbackSubscriptionKeys } from './types.js'
+import { feedbackSubscriptionKeys, type InstanceBaseExt, type ModuleTypes } from './types.js'
 import axios, { AxiosInstance, type AxiosResponse, AxiosError } from 'axios'
 import PQueue from 'p-queue'
 import { ZodError } from 'zod'
 import { throttle } from 'es-toolkit'
 
-export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
+export { UpgradeScripts }
+
+export default class ModuleInstance extends InstanceBase<ModuleTypes> implements InstanceBaseExt {
 	#config!: ModuleConfig // Setup in init()
 	#secrets!: ModuleSecrets // Setup in init()
 	#client!: AxiosInstance
@@ -345,5 +347,3 @@ export class ModuleInstance extends InstanceBase<ModuleConfig, ModuleSecrets> {
 		UpdateVariableValues(this)
 	}
 }
-
-runEntrypoint(ModuleInstance, UpgradeScripts)

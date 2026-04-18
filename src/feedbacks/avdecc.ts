@@ -1,5 +1,5 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
-import type { ModuleInstance } from '../main.js'
+import type ModuleInstance from '../main.js'
 import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
 
 export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
@@ -11,6 +11,7 @@ export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackD
 			defaultStyle: styles.blackOnRed,
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'avdecc')
 				return instance.device.avdeccLock
 			},
 		}
@@ -19,13 +20,13 @@ export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackD
 			type: 'value',
 			options: [],
 			callback: (_feedback, _context) => {
+				feedbackSubscribe(instance, 'avdecc')
 				return instance.device.avdeccEntityId
 			},
 		}
 	}
 
 	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].subscribe = feedbackSubscribe(instance, 'avdecc')
 		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'avdecc')
 	})
 	return feedbacks

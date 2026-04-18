@@ -1,4 +1,4 @@
-import type { ModuleInstance } from './main.js'
+import type ModuleInstance from './main.js'
 import { getControlActions } from './actions/control.js'
 import { getPowerActions } from './actions/power.js'
 

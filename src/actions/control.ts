@@ -1,5 +1,5 @@
 import type { CompanionActionDefinition, CompanionActionDefinitions } from '@companion-module/base'
-import type { ModuleInstance } from '../main.js'
+import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
 import { intRangeLimiter } from '../utils.js'
 
@@ -23,9 +23,9 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				},
 			],
 			callback: async (event) => {
-				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
 				let newState = false
-				switch (event.options.state?.toString()) {
+				switch (event.options.state as string) {
 					case 'mute':
 						newState = true
 						break
@@ -61,9 +61,9 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				},
 			],
 			callback: async (event) => {
-				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
 				let newState = false
-				switch (event.options.state?.toString()) {
+				switch (event.options.state as string) {
 					case 'invert':
 						newState = true
 						break
@@ -94,11 +94,12 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 					min: 0,
 					max: 96000,
 					description: 'Output delay in samples',
+					asInteger: true,
 				},
 			],
 			callback: async (event) => {
-				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
-				const delay = Math.round(Number(event.options.delay))
+				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
+				const delay = Number(event.options.delay)
 
 				try {
 					await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
@@ -109,9 +110,10 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				}
 			},
 			learn: async (event) => {
+				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
 				return {
 					...event.options,
-					delay: instance.device.outputDspChannels[Number(event.options.channel) - 1].delay,
+					delay: instance.device.outputDspChannels[channelNum - 1].delay,
 				}
 			},
 		}
@@ -131,17 +133,17 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 			],
 			callback: async (event) => {
 				const gain = Number(event.options.gain)
-
+				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
 				try {
-					await instance.clientPost(`/control/dsp/output/${event.options.channel}/gain`, gain)
-					instance.log('info', `Channel ${event.options.channel} gain ${gain} dB`)
+					await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain)
+					instance.log('info', `Channel ${channelNum} gain ${gain} dB`)
 				} catch (err) {
-					instance.log('warn', `Channel ${event.options.channel} gain set failed`)
+					instance.log('warn', `Channel ${channelNum} gain set failed`)
 					instance.handleError(err)
 				}
 			},
 			learn: async (event) => {
-				const channelNum = intRangeLimiter(String(event.options.channel), 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
 				return {
 					...event.options,
 					gain: instance.device.outputDspChannels[channelNum - 1].gain,

@@ -1,5 +1,5 @@
 import type { CompanionActionDefinition, CompanionActionDefinitions } from '@companion-module/base'
-import type { ModuleInstance } from '../main.js'
+import type ModuleInstance from '../main.js'
 
 export function getPowerActions(instance: ModuleInstance): CompanionActionDefinitions {
 	const actions: Record<string, CompanionActionDefinition> = {}
@@ -36,7 +36,7 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 			],
 			callback: async (event) => {
 				let newState = false
-				switch (event.options.state?.toString()) {
+				switch (event.options.state as string) {
 					case 'standby':
 						newState = true
 						break

@@ -50,7 +50,7 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			},
 		}
 		feedbacks.dspOutputVolume = {
-			name: 'DSP Output - Gain',
+			name: 'DSP Output - Volume',
 			type: 'value',
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {

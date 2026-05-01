@@ -16,7 +16,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/phillipivan/companion-module-lacoustic-amplifiers.git"
+		"url": "git+https://github.com/bitfocus/companion-module-lacoustics-amplifiers.git"
 	},
 	"engines": {
 		"node": "^22.20",

@@ -7,8 +7,8 @@
 	"description": "Control L'Acoustics amplifiers via their HTTP Rest API.",
 	"version": "0.0.0",
 	"license": "MIT",
-	"repository": "git+https://github.com/phillipivan/companion-module-lacoustic-amplifiers.git",
-	"bugs": "https://github.com/phillipivan/companion-module-lacoustic-amplifiers/issues",
+	"repository": "git+https://github.com/bitfocus/companion-module-lacoustics-amplifiers.git",
+	"bugs": "https://github.com/bitfocus/companion-module-lacoustics-amplifiers/issues",
 	"maintainers": [
 		{
 			"name": "Phillip Ivan Pietruschka"

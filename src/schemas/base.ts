@@ -368,6 +368,14 @@ export const En54SigGenBandSchema = z.object({
 	taps: Int.min(64).max(32768),
 })
 
+export const En54OptionsObject = z.object(
+	Object.fromEntries(Enums.En54OptionsEnum.options.map((key) => [key.toLowerCase(), Bool])) as {
+		[K in Lowercase<z.infer<typeof Enums.En54OptionsEnum>>]: typeof Bool
+	},
+)
+
+export const En54OptionsSchema = z.union([Enums.En54OptionsEnum, En54OptionsObject])
+
 export const En54Schema = z.object({
 	enable: Bool,
 
@@ -413,7 +421,7 @@ export const En54Schema = z.object({
 		resolution: Int.min(10).max(1000),
 	}),
 
-	options: Enums.En54OptionsEnum,
+	options: En54OptionsSchema,
 	period: Int.min(1).max(58),
 
 	siggen: z.object({
@@ -641,6 +649,8 @@ export type MonitorOutputSchema = z.infer<typeof MonitorOutputSchema>
 export type MonitorSchema = z.infer<typeof MonitorSchema>
 export type ErrorsSchema = z.infer<typeof ErrorsSchema>
 export type En54SigGenBandSchema = z.infer<typeof En54SigGenBandSchema>
+export type En54OptionsObject = z.infer<typeof En54OptionsObject>
+export type En54OptionsSchema = z.infer<typeof En54OptionsSchema>
 export type En54Schema = z.infer<typeof En54Schema>
 export type LevelPeakSchema = z.infer<typeof LevelPeakSchema>
 export type LevelSchema = z.infer<typeof LevelSchema>

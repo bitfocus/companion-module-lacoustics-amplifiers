@@ -1,10 +1,26 @@
-import type { CompanionActionDefinition, CompanionActionDefinitions } from '@companion-module/base'
+import type { CompanionActionDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 
-export function getPowerActions(instance: ModuleInstance): CompanionActionDefinitions {
-	const actions: Record<string, CompanionActionDefinition> = {}
+export enum ActionIdsPower {
+	Reboot = 'reboot',
+	Standby = 'standby',
+}
+
+export type ActionSchemaPower = {
+	[ActionIdsPower.Reboot]: {
+		options: Record<string, never>
+	}
+	[ActionIdsPower.Standby]: {
+		options: {
+			state: 'standby' | 'on' | 'toggle'
+		}
+	}
+}
+
+export function getPowerActions(instance: ModuleInstance): Partial<CompanionActionDefinitions<ActionSchemaPower>> {
+	const actions: Partial<CompanionActionDefinitions<ActionSchemaPower>> = {}
 	if (instance.device.powerRebootable) {
-		actions.reboot = {
+		actions[ActionIdsPower.Reboot] = {
 			name: 'Power - Reboot',
 			options: [],
 			callback: async (_event) => {
@@ -14,7 +30,7 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 		}
 	}
 	if (instance.device.powerCanStandby) {
-		actions.standby = {
+		actions[ActionIdsPower.Standby] = {
 			name: 'Power - Standby',
 			options: [
 				{
@@ -31,7 +47,7 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 			],
 			callback: async (event) => {
 				let newState = false
-				switch (event.options.state as string) {
+				switch (event.options.state) {
 					case 'standby':
 						newState = true
 						break

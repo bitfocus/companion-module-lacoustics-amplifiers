@@ -1,6 +1,6 @@
 import type { CompanionInputFieldNumber } from '@companion-module/base'
 
-export const ChannelOption = (maxChan: number): CompanionInputFieldNumber => {
+export const ChannelOption = (maxChan: number): CompanionInputFieldNumber<'channel'> => {
 	return {
 		type: 'number',
 		id: 'channel',

@@ -11,7 +11,7 @@ import { feedbackSubscriptionKeys, type InstanceBaseExt, type ModuleTypes } from
 import axios, { AxiosInstance, type AxiosResponse, AxiosError } from 'axios'
 import PQueue from 'p-queue'
 import { ZodError } from 'zod'
-import { throttle } from 'es-toolkit'
+import { throttle, type ThrottledFunction } from 'es-toolkit'
 
 export { UpgradeScripts }
 
@@ -25,6 +25,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	device!: LacousticDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
 	feedbackSubscriptions = LacousticDevice.initFeedbackSubscriptionTracker()
+	throttledCheckFeedbacksById!: ThrottledFunction<() => void>
 	#feedbacksToUpdate: Set<string> = new Set()
 	constructor(internal: unknown) {
 		super(internal)
@@ -49,6 +50,18 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		this.#queue.clear()
 		this.#controller.abort()
 		this.#controller = new AbortController()
+
+		// Set this.throttledCheckedFeedbacksById() here so that it references the new AbortController
+		this.throttledCheckFeedbacksById = throttle(
+			() => {
+				if (this.#feedbacksToUpdate.size === 0) return
+				this.checkFeedbacksById(...Array.from(this.#feedbacksToUpdate))
+				this.#feedbacksToUpdate.clear()
+			},
+			50,
+			{ edges: ['leading', 'trailing'], signal: this.#controller.signal },
+		)
+
 		this.#config = config
 		this.#secrets = secrets
 		if (config.host) {
@@ -76,7 +89,6 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 					}
 				: undefined,
 			timeout: 5000,
-			signal: this.#controller.signal,
 			headers: {
 				'User-Agent': `companion-module/${this.label}`,
 				'Content-Type': 'application/json',
@@ -87,9 +99,9 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 
 	public async clientGet(url: string): Promise<AxiosResponse<any, any>> {
 		return await this.#queue.add(
-			async () => {
+			async ({ signal }) => {
 				if (!this.#client) throw new Error('Axios Client not initialised')
-				const response = await this.#client.get(url)
+				const response = await this.#client.get(url, { signal: signal })
 				this.debug(response.data)
 				this.#statusManager.updateStatus(InstanceStatus.Ok)
 				return response
@@ -103,9 +115,9 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 
 	public async clientPost(url: string, data: unknown): Promise<AxiosResponse<any, any>> {
 		return await this.#queue.add(
-			async () => {
+			async ({ signal }) => {
 				if (!this.#client) throw new Error('Axios Client not initialised')
-				const response = await this.#client.post(url, data)
+				const response = await this.#client.post(url, data, { signal: signal })
 				this.debug(response.data)
 				this.#statusManager.updateStatus(InstanceStatus.Ok)
 				return response
@@ -315,16 +327,6 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			}
 		}
 	}
-
-	throttledCheckFeedbacksById = throttle(
-		() => {
-			if (this.#feedbacksToUpdate.size === 0) return
-			this.checkFeedbacksById(...Array.from(this.#feedbacksToUpdate))
-			this.#feedbacksToUpdate.clear()
-		},
-		50,
-		{ edges: ['leading', 'trailing'], signal: this.#controller.signal },
-	)
 
 	// Return config fields for web config
 	getConfigFields(): SomeCompanionConfigField[] {

@@ -1,11 +1,54 @@
-import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
+import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
-import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 
-export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
-	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
+export enum FeedbackIdsControl {
+	DspOutputMute = 'dspOutputMute',
+	DspOutputPolarity = 'dspOutputPolarity',
+	DspOutputDelay = 'dspOutputDelay',
+	DspOutputGain = 'dspOutputGain',
+	DspOutputVolume = 'dspOutputVolume',
+}
+
+export type FeedbackSchemaControl = {
+	[FeedbackIdsControl.DspOutputMute]: {
+		type: 'boolean'
+		options: {
+			channel: number
+		}
+	}
+	[FeedbackIdsControl.DspOutputPolarity]: {
+		type: 'boolean'
+		options: {
+			channel: number
+		}
+	}
+	[FeedbackIdsControl.DspOutputDelay]: {
+		type: 'value'
+		options: {
+			channel: number
+		}
+	}
+	[FeedbackIdsControl.DspOutputGain]: {
+		type: 'value'
+		options: {
+			channel: number
+		}
+	}
+	[FeedbackIdsControl.DspOutputVolume]: {
+		type: 'value'
+		options: {
+			channel: number
+		}
+	}
+}
+
+export function getControlFeedbacks(
+	instance: ModuleInstance,
+): Partial<CompanionFeedbackDefinitions<FeedbackSchemaControl>> {
+	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaControl>> = {}
 	if (instance.device.outputDspChannelCount > 0) {
 		feedbacks.dspOutputMute = {
 			name: 'DSP Output - Mute',
@@ -14,7 +57,7 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'control')
-				const channelNum = intRangeLimiter(feedback.options.channel as number, 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.outputDspChannelCount)
 				return instance.device.outputDspChannels[channelNum - 1].mute
 			},
 		}
@@ -25,7 +68,7 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'control')
-				const channelNum = intRangeLimiter(feedback.options.channel as number, 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.outputDspChannelCount)
 				return instance.device.outputDspChannels[channelNum - 1].invert
 			},
 		}
@@ -35,7 +78,7 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'control')
-				const channelNum = intRangeLimiter(feedback.options.channel as number, 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.outputDspChannelCount)
 				return instance.device.outputDspChannels[channelNum - 1].delay
 			},
 		}
@@ -45,7 +88,7 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'control')
-				const channelNum = intRangeLimiter(feedback.options.channel as number, 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.outputDspChannelCount)
 				return instance.device.outputDspChannels[channelNum - 1].gain
 			},
 		}
@@ -55,13 +98,13 @@ export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedback
 			options: [ChannelOption(instance.device.outputDspChannelCount)],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'control')
-				const channelNum = intRangeLimiter(feedback.options.channel as number, 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.outputDspChannelCount)
 				return instance.device.outputDspChannels[channelNum - 1].volume
 			},
 		}
 	}
-	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'control')
-	})
+
+	addUnsubscribe(instance, feedbacks, 'control')
+
 	return feedbacks
 }

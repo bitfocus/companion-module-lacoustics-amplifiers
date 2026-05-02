@@ -7,7 +7,7 @@ import {
 } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
-import { colors, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { colors, feedbackSubscribe, addUnsubscribe } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 import { graphics } from 'companion-module-utils'
 
@@ -213,9 +213,7 @@ export function getGraphicFeedbacks(instance: ModuleInstance): CompanionFeedback
 		)
 	}
 
-	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'level')
-	})
+	addUnsubscribe(instance, feedbacks, 'level')
 
 	return feedbacks
 }

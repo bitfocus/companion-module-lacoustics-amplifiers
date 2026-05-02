@@ -1,9 +1,27 @@
-import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
+import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
 
-export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
-	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
+export enum FeedbackIdsAvdecc {
+	Lock = 'avdeccLock',
+	EntityId = 'avdeccEntityId',
+}
+
+export type FeedbackSchemaAvdecc = {
+	[FeedbackIdsAvdecc.Lock]: {
+		type: 'boolean'
+		options: Record<string, never>
+	}
+	[FeedbackIdsAvdecc.EntityId]: {
+		type: 'value'
+		options: Record<string, never>
+	}
+}
+
+export function getAvdeccFeedbacks(
+	instance: ModuleInstance,
+): Partial<CompanionFeedbackDefinitions<FeedbackSchemaAvdecc>> {
+	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaAvdecc>> = {}
 	if (instance.device.avdeccSupported) {
 		feedbacks.avdeccLock = {
 			name: 'Avdecc - Lock',
@@ -26,8 +44,7 @@ export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackD
 		}
 	}
 
-	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'avdecc')
-	})
+	addUnsubscribe(instance, feedbacks, 'avdecc')
+
 	return feedbacks
 }

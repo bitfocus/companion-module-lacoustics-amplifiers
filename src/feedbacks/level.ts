@@ -1,7 +1,7 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
-import { feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { feedbackSubscribe, addUnsubscribe } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 
 export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
@@ -30,8 +30,8 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			},
 		}
 	}
-	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'level')
-	})
+
+	addUnsubscribe(instance, feedbacks, 'level')
+
 	return feedbacks
 }

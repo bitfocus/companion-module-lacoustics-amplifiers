@@ -1,6 +1,6 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { feedbackSubscribe, addUnsubscribe } from './consts.js'
 import { isKeyOf } from '../utils.js'
 
 export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
@@ -66,8 +66,8 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 			}
 		}
 	}
-	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'ptp')
-	})
+
+	addUnsubscribe(instance, feedbacks, 'ptp')
+
 	return feedbacks
 }

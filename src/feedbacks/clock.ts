@@ -1,9 +1,32 @@
-import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
+import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
 
-export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
-	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
+export enum FeedbackIdsClock {
+	Lock = 'clockLock',
+	Status = 'clockStatus',
+	Type = 'clockType',
+}
+
+export type FeedbackSchemaClock = {
+	[FeedbackIdsClock.Lock]: {
+		type: 'boolean'
+		options: Record<string, never>
+	}
+	[FeedbackIdsClock.Status]: {
+		type: 'value'
+		options: Record<string, never>
+	}
+	[FeedbackIdsClock.Type]: {
+		type: 'value'
+		options: Record<string, never>
+	}
+}
+
+export function getClockFeedbacks(
+	instance: ModuleInstance,
+): Partial<CompanionFeedbackDefinitions<FeedbackSchemaClock>> {
+	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaClock>> = {}
 	if (instance.device.clockSupported) {
 		feedbacks.clockLock = {
 			name: 'Clock - Locked',
@@ -35,8 +58,7 @@ export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 		}
 	}
 
-	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'clock')
-	})
+	addUnsubscribe(instance, feedbacks, 'clock')
+
 	return feedbacks
 }

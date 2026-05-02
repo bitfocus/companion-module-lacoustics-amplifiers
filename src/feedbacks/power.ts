@@ -1,6 +1,6 @@
 import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { styles, feedbackSubscribe, feedbackUnsubscribe } from './consts.js'
+import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
 
 export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
 	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
@@ -75,8 +75,8 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			},
 		}
 	}
-	Object.keys(feedbacks).forEach((key) => {
-		feedbacks[key].unsubscribe = feedbackUnsubscribe(instance, 'power')
-	})
+
+	addUnsubscribe(instance, feedbacks, 'power')
+
 	return feedbacks
 }

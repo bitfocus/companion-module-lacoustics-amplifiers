@@ -1,4 +1,10 @@
-import { combineRgb, CompanionFeedbackContext, CompanionFeedbackInfo } from '@companion-module/base'
+import {
+	combineRgb,
+	CompanionOptionValues,
+	CompanionFeedbackContext,
+	CompanionFeedbackDefinitions,
+	CompanionFeedbackInfo,
+} from '@companion-module/base'
 import ModuleInstance from '../main.js'
 import { FeedbackSubscriptionKey } from '../types.js'
 
@@ -34,3 +40,18 @@ export const feedbackUnsubscribe =
 	(feedback: CompanionFeedbackInfo, _context: CompanionFeedbackContext): void => {
 		instance.feedbackSubscriptions[type].delete(feedback.id)
 	}
+
+export const addUnsubscribe = <
+	TSchema extends Record<string, { type: 'boolean' | 'value' | 'advanced'; options: CompanionOptionValues }>,
+>(
+	instance: ModuleInstance,
+	feedbacks: Partial<CompanionFeedbackDefinitions<TSchema>>,
+	subscriptionKey: FeedbackSubscriptionKey,
+): void => {
+	;(Object.keys(feedbacks) as Array<keyof typeof feedbacks>).forEach((key) => {
+		const feedback = feedbacks[key]
+		if (feedback) {
+			feedback.unsubscribe = feedbackUnsubscribe(instance, subscriptionKey)
+		}
+	})
+}

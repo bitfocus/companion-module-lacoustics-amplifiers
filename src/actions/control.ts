@@ -35,13 +35,8 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 					case 'toggle':
 						newState = !instance.device.outputDspChannels[channelNum - 1].mute
 				}
-				try {
-					await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
-					instance.log('info', `Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
-				} catch (err) {
-					instance.log('warn', `Channel ${channelNum} Mute failed`)
-					instance.handleError(err)
-				}
+				await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
+				instance.log('info', `Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
 			},
 		}
 		actions.dspOutputPolarity = {
@@ -73,13 +68,8 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 					case 'toggle':
 						newState = !instance.device.outputDspChannels[channelNum - 1].invert
 				}
-				try {
-					await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
-					instance.log('info', `Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)
-				} catch (err) {
-					instance.log('warn', `Channel ${channelNum} Polarity Invert failed`)
-					instance.handleError(err)
-				}
+				await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
+				instance.log('info', `Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)
 			},
 		}
 		actions.dspOutputDelay = {
@@ -101,13 +91,8 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
 				const delay = Number(event.options.delay)
 
-				try {
-					await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
-					instance.log('info', `Channel ${channelNum} delay ${delay} samples`)
-				} catch (err) {
-					instance.log('warn', `Channel ${channelNum} Delay set failed`)
-					instance.handleError(err)
-				}
+				await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
+				instance.log('info', `Channel ${channelNum} delay ${delay} samples`)
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
@@ -134,13 +119,8 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 			callback: async (event) => {
 				const gain = Number(event.options.gain)
 				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)
-				try {
-					await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain)
-					instance.log('info', `Channel ${channelNum} gain ${gain} dB`)
-				} catch (err) {
-					instance.log('warn', `Channel ${channelNum} gain set failed`)
-					instance.handleError(err)
-				}
+				await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain)
+				instance.log('info', `Channel ${channelNum} gain ${gain} dB`)
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel as number, 1, instance.device.outputDspChannelCount)

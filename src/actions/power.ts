@@ -8,13 +8,8 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 			name: 'Power - Reboot',
 			options: [],
 			callback: async (_event) => {
-				try {
-					await instance.clientPost('/power/reboot', true)
-					instance.log('info', `Rebooting...`)
-				} catch (err) {
-					instance.log('warn', `Reboot failed`)
-					instance.handleError(err)
-				}
+				await instance.clientPost('/power/reboot', true)
+				instance.log('info', `Rebooting...`)
 			},
 		}
 	}
@@ -46,13 +41,8 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 					case 'toggle':
 						newState = !instance.device.powerStandby
 				}
-				try {
-					await instance.clientPost('/power/standby', newState)
-					instance.log('info', `Powering ${newState ? 'off' : 'on'}`)
-				} catch (err) {
-					instance.log('warn', `Power standby failed`)
-					instance.handleError(err)
-				}
+				await instance.clientPost('/power/standby', newState)
+				instance.log('info', `Powering ${newState ? 'off' : 'on'}`)
 			},
 		}
 	}

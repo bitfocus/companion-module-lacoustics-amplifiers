@@ -1,5 +1,4 @@
 import {
-	type CompanionFeedbackDefinition,
 	type CompanionFeedbackDefinitions,
 	type CompanionInputFieldNumber,
 	type CompanionInputFieldDropdown,
@@ -11,6 +10,8 @@ import { ChannelOption } from '../options.js'
 import { colors, feedbackSubscribe, addUnsubscribe } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 import { graphics } from 'companion-module-utils'
+
+type positions = 'left' | 'right' | 'top' | 'bottom'
 
 const positionOption = {
 	type: 'dropdown',
@@ -59,7 +60,7 @@ const valueToPercent = (value: number, min = 0, max = 100, invert = false): numb
 }
 
 const calculateBarDimensions = (
-	position: string,
+	position: positions,
 	padding: number,
 	offset: number,
 	width: number,
@@ -101,12 +102,21 @@ const calculateBarDimensions = (
 	return { ofsX1, ofsY1, bWidth, bLength }
 }
 
+type LevelMeterOptionsSchema = {
+	channel: number
+	position: positions
+	padding: number
+	offset: number
+	width: number
+	min: number
+}
+
 const createLevelMeterFeedback = (
 	instance: ModuleInstance,
 	name: string,
 	channelCount: number,
 	getLevelValue: (channelNum: number) => number | undefined,
-): CompanionAdvancedFeedbackDefinition => ({
+): CompanionAdvancedFeedbackDefinition<LevelMeterOptionsSchema> => ({
 	name,
 	type: 'advanced',
 	options: [
@@ -130,33 +140,30 @@ const createLevelMeterFeedback = (
 			default: -100,
 			description: 'Value less than or equal to this will result in no metering',
 			min: -0xff,
-			max: 0xff,
+			max: -12,
 			asInteger: true,
 		},
 	],
 	callback: async (feedback, _context) => {
-		const logger = createModuleLogger('Feedbacks:Level Meter')
+		const logger = createModuleLogger(`Feedbacks:${name}`)
 		feedbackSubscribe(instance, 'level')
 		if (!('image' in feedback) || feedback.image === undefined) {
-			logger.warn(`Feedback ${feedback.id} does not support images}`)
+			logger.warn(`Feedback ${feedback.id} does not support images`)
 			return {}
 		}
 
 		const opt = feedback.options
-		const min = Number(opt.min)
+		const min = opt.min
 		const max = 0
-		const channelNum = intRangeLimiter(opt.channel as number, 1, channelCount)
+		const channelNum = intRangeLimiter(opt.channel, 1, channelCount)
 		const value = getLevelValue(channelNum - 1)
 
 		if (Number.isNaN(value) || value === undefined) throw new Error('Value is a NaN/Undefined')
-		if (min >= max) {
-			throw new Error(`Invalid min/max choices for level-meter.\n${JSON.stringify(opt)}`)
-		}
 
-		const position = (opt.position as string) ?? 'right'
-		const padding = Number(opt.padding)
-		const offset = Number(opt.offset)
-		const width = Number(opt.width ?? 6)
+		const position = opt.position
+		const padding = opt.padding
+		const offset = opt.offset
+		const width = opt.width
 
 		const { ofsX1, ofsY1, bWidth, bLength } = calculateBarDimensions(
 			position,
@@ -194,11 +201,29 @@ const createLevelMeterFeedback = (
 	},
 })
 
-export function getGraphicFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
-	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
+export enum FeedbackIdsGraphics {
+	LevelMeterDspOutput = 'levelMeterDspOutput',
+	LevelMeterDspInput = 'levelMeterDspInput',
+}
+
+type FeedbackSchemaGraphics = {
+	[FeedbackIdsGraphics.LevelMeterDspOutput]: {
+		type: 'advanced'
+		options: LevelMeterOptionsSchema
+	}
+	[FeedbackIdsGraphics.LevelMeterDspInput]: {
+		type: 'advanced'
+		options: LevelMeterOptionsSchema
+	}
+}
+
+export function getGraphicFeedbacks(
+	instance: ModuleInstance,
+): Partial<CompanionFeedbackDefinitions<FeedbackSchemaGraphics>> {
+	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaGraphics>> = {}
 
 	if (instance.device.outputDspLevelsCount > 0) {
-		feedbacks.levelMeterDspOutput = createLevelMeterFeedback(
+		feedbacks[FeedbackIdsGraphics.LevelMeterDspOutput] = createLevelMeterFeedback(
 			instance,
 			'Level Meter - DSP Output',
 			instance.device.outputDspLevelsCount,
@@ -207,7 +232,7 @@ export function getGraphicFeedbacks(instance: ModuleInstance): CompanionFeedback
 	}
 
 	if (instance.device.inputDspLevelsCount > 0) {
-		feedbacks.levelMeterDspInput = createLevelMeterFeedback(
+		feedbacks[FeedbackIdsGraphics.LevelMeterDspInput] = createLevelMeterFeedback(
 			instance,
 			'Level Meter - DSP Input',
 			instance.device.inputDspLevelsCount,

@@ -3,14 +3,14 @@ import { GetConfigFields, type ModuleConfig, type ModuleSecrets } from './config
 import { UpdateVariableDefinitions, UpdateVariableValues } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
+import { handleError } from './errors.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticsDevice } from './device.js'
 import { StatusManager } from './status.js'
 import * as Enums from './enums/enums.js'
 import { feedbackSubscriptionKeys, type InstanceBaseExt, type ModuleTypes } from './types.js'
-import axios, { AxiosInstance, type AxiosResponse, AxiosError } from 'axios'
+import axios, { AxiosInstance, type AxiosResponse } from 'axios'
 import PQueue from 'p-queue'
-import { ZodError } from 'zod'
 import { throttle, type ThrottledFunction } from 'es-toolkit'
 
 export { UpgradeScripts }
@@ -20,7 +20,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	#secrets!: ModuleSecrets // Setup in init()
 	#client!: AxiosInstance
 	#queue = new PQueue({ concurrency: 10, autoStart: true, interval: 50, intervalCap: 1, strict: true })
-	#statusManager = new StatusManager(this, { status: InstanceStatus.Connecting, message: 'Connecting' }, 1000)
+	statusManager = new StatusManager(this, { status: InstanceStatus.Connecting, message: 'Connecting' }, 1000)
 	#controller = new AbortController()
 	device!: LacousticsDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
@@ -41,7 +41,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		this.log('debug', `destroy ${this.id}:${this.label}`)
 		this.#controller.abort()
 		this.#queue.clear()
-		this.#statusManager.destroy()
+		this.statusManager.destroy()
 		if (this.#pollTimer) clearTimeout(this.#pollTimer)
 	}
 
@@ -65,7 +65,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		this.#config = config
 		this.#secrets = secrets
 		if (config.host) {
-			this.#statusManager.updateStatus(InstanceStatus.Connecting)
+			this.statusManager.updateStatus(InstanceStatus.Connecting)
 			this.initClient(this.#config, this.#secrets)
 			await this.initDevice()
 			this.updateActions() // export actions
@@ -74,7 +74,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			this.feedbackSubscriptions.info.add('var')
 			this.updateVariableValues()
 		} else {
-			this.#statusManager.updateStatus(InstanceStatus.BadConfig, 'No Host Configured')
+			this.statusManager.updateStatus(InstanceStatus.BadConfig, 'No Host Configured')
 			return
 		}
 	}
@@ -103,7 +103,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 				if (!this.#client) throw new Error('Axios Client not initialised')
 				const response = await this.#client.get(url, { signal: signal })
 				this.debug(response.data)
-				this.#statusManager.updateStatus(InstanceStatus.Ok)
+				this.statusManager.updateStatus(InstanceStatus.Ok)
 				return response
 			},
 			{
@@ -119,7 +119,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 				if (!this.#client) throw new Error('Axios Client not initialised')
 				const response = await this.#client.post(url, data, { signal: signal })
 				this.debug(response.data)
-				this.#statusManager.updateStatus(InstanceStatus.Ok)
+				this.statusManager.updateStatus(InstanceStatus.Ok)
 				return response
 			},
 			{
@@ -139,7 +139,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			}, this.#config.interval ?? 1000)
 		} catch (err) {
 			this.log('error', 'Could not initialise device')
-			this.handleError(err)
+			handleError(err, this)
 		}
 	}
 
@@ -159,163 +159,13 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 				this.throttledCheckFeedbacksById()
 			} catch (err) {
 				this.log('warn', 'Polling error')
-				this.handleError(err)
+				handleError(err, this)
 			}
 		}
 		this.updateVariableValues()
 		this.#pollTimer = setTimeout(() => {
 			this.pollDevice().catch(() => {})
 		}, this.#config.interval ?? 1000)
-	}
-
-	public handleError(err: unknown): void {
-		if (axios.isAxiosError(err)) {
-			this.#handleAxiosError(err)
-		} else if (err instanceof ZodError) {
-			this.#handleZodError(err)
-		} else {
-			this.#handleUnknownError(err)
-		}
-	}
-
-	#handleAxiosError(err: AxiosError): void {
-		this.debug(err)
-
-		if (err.response) {
-			// Server responded with error status (4xx, 5xx)
-			this.#handleHttpError(err)
-		} else if (err.request) {
-			// Request sent but no response received (network/timeout issues)
-			this.#handleNetworkError(err)
-		} else {
-			// Error during request setup
-			this.#statusManager.updateStatus(InstanceStatus.UnknownError)
-			this.log('error', `Request setup error: ${err.message}`)
-		}
-	}
-
-	#handleHttpError(err: AxiosError): void {
-		const status = err.response?.status
-
-		// Set status based on HTTP response code
-		if (status && status >= 500) {
-			this.#statusManager.updateStatus(InstanceStatus.UnknownError)
-			this.log('error', `Server error ${status}: ${err.message}`)
-		} else if (status === 401 || status === 403) {
-			this.#statusManager.updateStatus(InstanceStatus.AuthenticationFailure)
-			this.log('error', `Authentication error ${status}: Check credentials`)
-		} else if (status === 404) {
-			this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
-			this.log('error', `Not found ${status}: Endpoint may have changed`)
-		} else if (status === 429) {
-			this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
-			this.log('error', `Rate limited ${status}: Too many requests`)
-		} else {
-			this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
-			this.log('error', `HTTP ${status}: ${err.message}`)
-		}
-
-		// Log response data if useful
-		if (err.response?.data && typeof err.response.data === 'string') {
-			this.log('error', `Response: ${err.response.data}`)
-		}
-	}
-
-	#handleNetworkError(err: AxiosError): void {
-		const code = err.code
-
-		switch (code) {
-			case 'ECONNREFUSED':
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', 'Connection refused: Device may be offline or unreachable')
-				break
-
-			case 'ETIMEDOUT':
-			case 'ECONNABORTED':
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', `Request timed out: Device not responding (${code})`)
-				break
-
-			case 'ENOTFOUND':
-			case 'EAI_AGAIN':
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', `DNS resolution failed: Cannot find device hostname (${code})`)
-				break
-
-			case 'ENETUNREACH':
-			case 'EHOSTUNREACH':
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', `Network unreachable: Check network connectivity (${code})`)
-				break
-
-			case 'ECONNRESET':
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', 'Connection reset: Device closed connection unexpectedly')
-				break
-
-			case 'EPIPE':
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', 'Broken pipe: Connection lost during transmission')
-				break
-
-			case 'ECANCELED':
-				// Request was cancelled (e.g., by AbortController)
-				this.log('warn', 'Request cancelled')
-				// Don't change status for cancellations
-				break
-
-			case 'ERR_NETWORK':
-				// Generic network error (often seen in browsers)
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', 'Network error: Check device connection')
-				break
-
-			case 'ERR_BAD_REQUEST':
-				// Request was malformed
-				this.#statusManager.updateStatus(InstanceStatus.UnknownError)
-				this.log('error', `Bad request: ${err.message}`)
-				break
-
-			case 'ERR_BAD_RESPONSE':
-				// Response was malformed
-				this.#statusManager.updateStatus(InstanceStatus.UnknownWarning)
-				this.log('error', `Invalid response from device: ${err.message}`)
-				break
-
-			default:
-				// Unknown network error
-				this.#statusManager.updateStatus(InstanceStatus.ConnectionFailure)
-				this.log('error', `Network error${code ? ` (${code})` : ''}: ${err.message}`)
-				break
-		}
-
-		// Additional context
-		if (err.config?.url) {
-			this.log('debug', `Failed URL: ${err.config.url}`)
-		}
-	}
-
-	#handleZodError(err: ZodError): void {
-		this.debug(err)
-
-		// Format Zod errors more readably
-		const formattedErrors = err.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n  ')
-
-		this.log('warn', `Invalid data returned:\n  ${formattedErrors}`)
-	}
-
-	#handleUnknownError(err: unknown): void {
-		this.#statusManager.updateStatus(InstanceStatus.UnknownError)
-
-		// Safely stringify unknown errors
-		const errorMessage = err instanceof Error ? err.message : String(err)
-
-		this.log('error', `Unknown error: ${errorMessage}`)
-
-		// Log stack trace if available
-		if (err instanceof Error && err.stack) {
-			this.debug(err.stack)
-		}
 	}
 
 	public debug(data: object | string | number): void {

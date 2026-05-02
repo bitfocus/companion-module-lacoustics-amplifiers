@@ -1,5 +1,5 @@
 import { InstanceBase, InstanceStatus, createModuleLogger } from '@companion-module/base'
-import { throttle } from 'es-toolkit'
+import { throttle, type ThrottledFunction } from 'es-toolkit'
 
 export interface Status {
 	status: InstanceStatus
@@ -22,7 +22,7 @@ export class StatusManager {
 	#throttleTimeout: number = 1000
 	#isDestroyed: boolean = false
 	#logger = createModuleLogger('Status Manager')
-	private setNewStatus!: ((newStatus?: Status) => void) & { flush: () => void }
+	private setNewStatus!: ThrottledFunction<(newStatus?: Status) => void>
 
 	constructor(
 		self: InstanceBase,

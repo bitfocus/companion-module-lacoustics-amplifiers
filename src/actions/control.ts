@@ -131,7 +131,6 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				return {
-					...event.options,
 					delay: instance.device.outputDspChannels[channelNum - 1].delay,
 				}
 			},
@@ -159,7 +158,6 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				return {
-					...event.options,
 					gain: instance.device.outputDspChannels[channelNum - 1].gain,
 				}
 			},

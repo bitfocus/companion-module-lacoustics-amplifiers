@@ -1,4 +1,4 @@
-import { InstanceBase, InstanceStatus } from '@companion-module/base'
+import { InstanceBase, InstanceStatus, createModuleLogger } from '@companion-module/base'
 import { throttle } from 'es-toolkit'
 
 export interface Status {
@@ -21,12 +21,13 @@ export class StatusManager {
 	#parentInstance!: InstanceBase
 	#throttleTimeout: number = 1000
 	#isDestroyed: boolean = false
+	#logger = createModuleLogger('Status Manager')
 	private setNewStatus!: ((newStatus?: Status) => void) & { flush: () => void }
 
 	constructor(
 		self: InstanceBase,
 		initStatus: Status = { status: InstanceStatus.Disconnected, message: null },
-		throttleTimeout: number = 2000,
+		throttleTimeout: number = 1000,
 	) {
 		this.#parentInstance = self
 		this.#throttleTimeout = throttleTimeout
@@ -70,13 +71,14 @@ export class StatusManager {
 
 	/**
 	 * Updates status if changed after throttle interval
-	 * @param newStatus Status & Message
+	 * @param newStatus InstanceStatus
+	 * @param newMsg Status message
 	 *
 	 */
 
 	public updateStatus(newStatus: InstanceStatus, newMsg: string | object | null = null): void {
 		if (this.#isDestroyed) {
-			console.log(
+			this.#logger.warn(
 				`Module destroyed. Can't update status\n${newStatus}: ${typeof newMsg == 'object' ? JSON.stringify(newMsg) : newMsg}`,
 			)
 			return

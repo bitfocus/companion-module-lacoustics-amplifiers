@@ -1,4 +1,4 @@
-import type { CompanionFeedbackDefinitions } from '@companion-module/base'
+import { type CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
 

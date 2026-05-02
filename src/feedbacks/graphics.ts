@@ -4,6 +4,7 @@ import {
 	type CompanionInputFieldNumber,
 	type CompanionInputFieldDropdown,
 	CompanionAdvancedFeedbackDefinition,
+	createModuleLogger,
 } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
@@ -134,9 +135,10 @@ const createLevelMeterFeedback = (
 		},
 	],
 	callback: async (feedback, _context) => {
+		const logger = createModuleLogger('Feedbacks:Level Meter')
 		feedbackSubscribe(instance, 'level')
 		if (!('image' in feedback) || feedback.image === undefined) {
-			instance.log('warn', `Feedback ${feedback.id} does not support images}`)
+			logger.warn(`Feedback ${feedback.id} does not support images}`)
 			return {}
 		}
 

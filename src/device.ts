@@ -1,3 +1,4 @@
+import { createModuleLogger } from '@companion-module/base'
 import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './schemas/base.js'
 import { DeviceSchemasByName } from './schemas/index.js'
 import * as Schemas from './schemas/base.js'
@@ -8,21 +9,24 @@ function isValidInfoName(name: unknown): name is Enums.InfoNameEnum {
 	return typeof name === 'string' && name in DeviceSchemasByName
 }
 
-export class LacousticDevice<N extends Enums.InfoNameEnum> {
+export class LacousticsDevice<N extends Enums.InfoNameEnum> {
+	#logger = createModuleLogger(`L'Acoustics Device`)
 	#device!: DeviceSchemasByName[N]
 
 	private constructor(device: DeviceSchemasByName[N]) {
 		this.#device = device
 	}
 
-	static fromUnknown(data: unknown): LacousticDevice<Enums.InfoNameEnum> {
+	static fromUnknown(data: unknown): LacousticsDevice<Enums.InfoNameEnum> {
+		const logger = createModuleLogger('LacousticsDeviceFactory')
 		if (typeof data == 'string') data = JSON.parse(data)
 		if (typeof data !== 'object') throw new Error('Can not initialize device, unknown data type')
 		const name = (data as any)?.info?.name
 		if (isValidInfoName(name)) {
+			logger.info(`Valid device type found: ${name}`)
 			const device = DeviceSchemasByName[name].parse(data)
 			//const parsed = DeviceSchema.parse(data)
-			return new LacousticDevice(device)
+			return new LacousticsDevice(device)
 		}
 		throw new Error(`Unsupported device type: ${name}`)
 	}
@@ -62,12 +66,14 @@ export class LacousticDevice<N extends Enums.InfoNameEnum> {
 		const newDevice = DeviceSchemasByName[this.#device.info.name].parse(device)
 		if (newDevice.info.name !== this.#device.info.name)
 			throw new Error(`Device name mismatch: expected ${this.#device.info.name}, got ${newDevice.info.name}`)
+		this.#logger.info(`Updating all device parameters`)
 		this.#device = newDevice as DeviceSchemasByName[N]
 	}
 
 	set devicePartial(device: unknown) {
 		const newDevice = DeviceSchemasByName[this.#device.info.name].partial().parse(device)
 		this.#device = { ...this.#device, ...newDevice }
+		this.#logger.debug(`Updating ${Object.keys(newDevice)}`)
 	}
 
 	get name(): string {

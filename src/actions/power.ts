@@ -1,4 +1,4 @@
-import type { CompanionActionDefinitions } from '@companion-module/base'
+import { type CompanionActionDefinitions, createModuleLogger } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 
 export enum ActionIdsPower {
@@ -19,13 +19,14 @@ export type ActionSchemaPower = {
 
 export function getPowerActions(instance: ModuleInstance): Partial<CompanionActionDefinitions<ActionSchemaPower>> {
 	const actions: Partial<CompanionActionDefinitions<ActionSchemaPower>> = {}
+	const logger = createModuleLogger('Actions:Power')
 	if (instance.device.powerRebootable) {
 		actions[ActionIdsPower.Reboot] = {
 			name: 'Power - Reboot',
 			options: [],
 			callback: async (_event) => {
 				await instance.clientPost('/power/reboot', true)
-				instance.log('info', `Rebooting...`)
+				logger.info(`Rebooting...`)
 			},
 		}
 	}
@@ -58,7 +59,7 @@ export function getPowerActions(instance: ModuleInstance): Partial<CompanionActi
 						newState = !instance.device.powerStandby
 				}
 				await instance.clientPost('/power/standby', newState)
-				instance.log('info', `Powering ${newState ? 'off' : 'on'}`)
+				logger.info(`Powering ${newState ? 'off' : 'on'}`)
 			},
 		}
 	}

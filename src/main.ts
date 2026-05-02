@@ -4,7 +4,7 @@ import { UpdateVariableDefinitions, UpdateVariableValues } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
 import { UpdateFeedbacks } from './feedbacks.js'
-import { LacousticDevice } from './device.js'
+import { LacousticsDevice } from './device.js'
 import { StatusManager } from './status.js'
 import * as Enums from './enums/enums.js'
 import { feedbackSubscriptionKeys, type InstanceBaseExt, type ModuleTypes } from './types.js'
@@ -22,9 +22,9 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	#queue = new PQueue({ concurrency: 10, autoStart: true, interval: 50, intervalCap: 1, strict: true })
 	#statusManager = new StatusManager(this, { status: InstanceStatus.Connecting, message: 'Connecting' }, 1000)
 	#controller = new AbortController()
-	device!: LacousticDevice<Enums.InfoNameEnum>
+	device!: LacousticsDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
-	feedbackSubscriptions = LacousticDevice.initFeedbackSubscriptionTracker()
+	feedbackSubscriptions = LacousticsDevice.initFeedbackSubscriptionTracker()
 	throttledCheckFeedbacksById!: ThrottledFunction<() => void>
 	#feedbacksToUpdate: Set<string> = new Set()
 	constructor(internal: unknown) {
@@ -133,7 +133,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		try {
 			const response = await this.clientGet('')
 			this.debug(response.data)
-			this.device = LacousticDevice.fromUnknown(response.data)
+			this.device = LacousticsDevice.fromUnknown(response.data)
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})
 			}, this.#config.interval ?? 1000)

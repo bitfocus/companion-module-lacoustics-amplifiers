@@ -58,6 +58,11 @@ export function getPowerActions(instance: ModuleInstance): Partial<CompanionActi
 						break
 					case 'toggle':
 						newState = !instance.device.powerStandby
+						break
+					default: {
+						const _exhaustiveCheck: never = event.options.state
+						return _exhaustiveCheck
+					}
 				}
 				await instance.clientPost('/power/standby', newState)
 				logger.info(`Powering ${newState ? 'off' : 'on'}`)

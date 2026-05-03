@@ -60,7 +60,7 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 			callback: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				let newState = false
-				switch (event.options.state as string) {
+				switch (event.options.state) {
 					case 'mute':
 						newState = true
 						break
@@ -69,6 +69,11 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 						break
 					case 'toggle':
 						newState = !instance.device.outputDspChannels[channelNum - 1].mute
+						break
+					default: {
+						const _exhaustiveCheck: never = event.options.state
+						return _exhaustiveCheck
+					}
 				}
 				await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
 				logger.info(`Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
@@ -93,7 +98,7 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 			callback: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				let newState = false
-				switch (event.options.state as string) {
+				switch (event.options.state) {
 					case 'invert':
 						newState = true
 						break
@@ -102,6 +107,11 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 						break
 					case 'toggle':
 						newState = !instance.device.outputDspChannels[channelNum - 1].invert
+						break
+					default: {
+						const _exhaustiveCheck: never = event.options.state
+						return _exhaustiveCheck
+					}
 				}
 				await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
 				logger.info(`Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)

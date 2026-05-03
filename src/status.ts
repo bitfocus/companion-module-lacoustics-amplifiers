@@ -1,5 +1,6 @@
-import { InstanceBase, InstanceStatus, createModuleLogger } from '@companion-module/base'
+import { InstanceStatus, createModuleLogger } from '@companion-module/base'
 import { throttle, type ThrottledFunction } from 'es-toolkit'
+import ModuleInstance from './main.js'
 
 export interface Status {
 	status: InstanceStatus
@@ -9,7 +10,7 @@ export interface Status {
 /**
  * Status Manager Utility
  * Only calls update Status if status has actually changed, with a configurable debounce
- * @param self InstanceBase from which to call updateStatus
+ * @param self Module Instance from which to call updateStatus
  * @param initStatus Status to be set on init
  * @param throttleTimeout Throttle rate for status updates
  *
@@ -18,14 +19,14 @@ export interface Status {
 export class StatusManager {
 	#currentStatus: Status = { status: InstanceStatus.Disconnected, message: '' }
 	#newStatus: Status = { status: InstanceStatus.Disconnected, message: '' }
-	#parentInstance!: InstanceBase
+	#parentInstance!: ModuleInstance
 	#throttleTimeout: number = 1000
 	#isDestroyed: boolean = false
 	#logger = createModuleLogger('Status Manager')
 	private setNewStatus!: ThrottledFunction<(newStatus?: Status) => void>
 
 	constructor(
-		self: InstanceBase,
+		self: ModuleInstance,
 		initStatus: Status = { status: InstanceStatus.Disconnected, message: null },
 		throttleTimeout: number = 1000,
 	) {

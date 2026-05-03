@@ -1,11 +1,48 @@
-import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
+import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
 
-export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
-	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
+export enum FeedbackIdsPower {
+	Standby = 'powerStandby',
+	SmpsStatus = 'powerSmpsStatus',
+	Dc24vIn = 'power24vIn',
+	Dc24vOut = 'power24vOut',
+	Mains = 'powerMains',
+}
+
+export type FeedbackSchemaPower = {
+	[FeedbackIdsPower.Standby]: {
+		type: 'boolean'
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
+	}
+	[FeedbackIdsPower.SmpsStatus]: {
+		type: 'boolean'
+		options: { psu: number }
+	}
+	[FeedbackIdsPower.Dc24vIn]: {
+		type: 'boolean'
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
+	}
+	[FeedbackIdsPower.Dc24vOut]: {
+		type: 'boolean'
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
+	}
+	[FeedbackIdsPower.Mains]: {
+		type: 'boolean'
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
+	}
+}
+
+export function getPowerFeedbacks(
+	instance: ModuleInstance,
+): Partial<CompanionFeedbackDefinitions<FeedbackSchemaPower>> {
+	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaPower>> = {}
 	if (instance.device.powerCanStandby) {
-		feedbacks.powerStandby = {
+		feedbacks[FeedbackIdsPower.Standby] = {
 			name: 'Power - Standby',
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
@@ -17,7 +54,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 		}
 	}
 	if (instance.device.powerSmpsCount > 0) {
-		feedbacks.powerSmpsStatus = {
+		feedbacks[FeedbackIdsPower.SmpsStatus] = {
 			name: 'Power - SMPS Status',
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
@@ -31,6 +68,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 					max: instance.device.powerSmpsCount,
 					range: true,
 					step: 1,
+					asInteger: true,
 				},
 			],
 			callback: (feedback, _context) => {
@@ -40,7 +78,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 		}
 	}
 	if (instance.device.powerHas24vIn) {
-		feedbacks.power24vIn = {
+		feedbacks[FeedbackIdsPower.Dc24vIn] = {
 			name: 'Power - 24V In',
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
@@ -52,7 +90,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 		}
 	}
 	if (instance.device.powerHas24vOut) {
-		feedbacks.power24vOut = {
+		feedbacks[FeedbackIdsPower.Dc24vOut] = {
 			name: 'Power - 24V Out',
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
@@ -64,7 +102,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 		}
 	}
 	if (instance.device.powerHasMains) {
-		feedbacks.power24vOut = {
+		feedbacks[FeedbackIdsPower.Mains] = {
 			name: 'Power - Mains',
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,

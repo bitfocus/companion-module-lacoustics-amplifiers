@@ -10,11 +10,13 @@ export enum FeedbackIdsAvdecc {
 export type FeedbackSchemaAvdecc = {
 	[FeedbackIdsAvdecc.Lock]: {
 		type: 'boolean'
-		options: Record<string, never>
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
 	}
 	[FeedbackIdsAvdecc.EntityId]: {
 		type: 'value'
-		options: Record<string, never>
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
 	}
 }
 

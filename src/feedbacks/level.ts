@@ -1,11 +1,33 @@
-import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
+import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
 import { feedbackSubscribe, addUnsubscribe } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 
-export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
-	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
+export enum FeedbackIdsLevels {
+	DspOutput = 'levelsDspOutput',
+	DspInput = 'levelsDspInput',
+}
+
+export type FeedbackSchemaLevels = {
+	[FeedbackIdsLevels.DspOutput]: {
+		type: 'value'
+		options: {
+			channel: number
+		}
+	}
+	[FeedbackIdsLevels.DspInput]: {
+		type: 'value'
+		options: {
+			channel: number
+		}
+	}
+}
+
+export function getLevelFeedbacks(
+	instance: ModuleInstance,
+): Partial<CompanionFeedbackDefinitions<FeedbackSchemaLevels>> {
+	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaLevels>> = {}
 	if (instance.device.outputDspLevelsCount > 0) {
 		feedbacks.levelsDspOutput = {
 			name: 'Levels - DSP Output',
@@ -13,7 +35,7 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			options: [ChannelOption(instance.device.outputDspLevelsCount)],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'level')
-				const channelNum = intRangeLimiter(feedback.options.channel as number, 1, instance.device.outputDspChannelCount)
+				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.outputDspChannelCount)
 				return instance.device.outputDspLevels[channelNum - 1].peak
 			},
 		}
@@ -25,7 +47,7 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			options: [ChannelOption(instance.device.inputDspLevelsCount)],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'level')
-				const channelNum = intRangeLimiter(feedback.options.channel as number, 1, instance.device.inputDspLevelsCount)
+				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.inputDspLevelsCount)
 				return instance.device.inputDspLevels[channelNum - 1].peak
 			},
 		}

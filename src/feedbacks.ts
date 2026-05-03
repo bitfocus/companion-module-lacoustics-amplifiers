@@ -1,11 +1,20 @@
 import type ModuleInstance from './main.js'
-import { getAvdeccFeedbacks } from './feedbacks/avdecc.js'
-import { getClockFeedbacks } from './feedbacks/clock.js'
-import { getControlFeedbacks } from './feedbacks/control.js'
+import { FeedbackSchemaAvdecc, getAvdeccFeedbacks } from './feedbacks/avdecc.js'
+import { FeedbackSchemaClock, getClockFeedbacks } from './feedbacks/clock.js'
+import { FeedbackSchemaControl, getControlFeedbacks } from './feedbacks/control.js'
 import { getGraphicFeedbacks } from './feedbacks/graphics.js'
-import { getLevelFeedbacks } from './feedbacks/level.js'
-import { getPowerFeedbacks } from './feedbacks/power.js'
-import { getPtpFeedbacks } from './feedbacks/ptp.js'
+import { FeedbackSchemaLevels, getLevelFeedbacks } from './feedbacks/level.js'
+import { FeedbackSchemaPower, getPowerFeedbacks } from './feedbacks/power.js'
+import { FeedbackSchemaPtp, getPtpFeedbacks } from './feedbacks/ptp.js'
+
+export type FeedbackSchema = Partial<
+	FeedbackSchemaAvdecc &
+		FeedbackSchemaClock &
+		FeedbackSchemaControl &
+		FeedbackSchemaLevels &
+		FeedbackSchemaPower &
+		FeedbackSchemaPtp
+>
 
 export function UpdateFeedbacks(self: ModuleInstance): void {
 	const feedbacks = {

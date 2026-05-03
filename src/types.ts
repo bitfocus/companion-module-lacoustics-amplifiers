@@ -1,13 +1,9 @@
-import type {
-	InstanceBase,
-	CompanionActionSchema,
-	CompanionOptionValues,
-	CompanionFeedbackSchema,
-	CompanionVariableValues,
-} from '@companion-module/base'
+import type { InstanceBase, CompanionVariableValues } from '@companion-module/base'
+import { ActionSchema } from './actions.js'
 import type { ModuleConfig, ModuleSecrets } from './config.js'
-import { LacousticDevice } from './device.js'
+import { LacousticsDevice } from './device.js'
 import * as Enums from './enums/enums.js'
+import { FeedbackSchema } from './feedbacks.js'
 
 export const feedbackSubscriptionKeys = [
 	'aes',
@@ -47,12 +43,12 @@ export type feedbackSubscriptions = {
 export interface ModuleTypes {
 	config: ModuleConfig
 	secrets: ModuleSecrets
-	actions: Record<string, CompanionActionSchema<CompanionOptionValues>>
-	feedbacks: Record<string, CompanionFeedbackSchema<CompanionOptionValues>>
+	actions: ActionSchema
+	feedbacks: FeedbackSchema
 	variables: CompanionVariableValues
 }
 
 export interface InstanceBaseExt extends InstanceBase<ModuleTypes> {
-	device: LacousticDevice<Enums.InfoNameEnum>
+	device: LacousticsDevice<Enums.InfoNameEnum>
 	feedbackSubscriptions: feedbackSubscriptions
 }

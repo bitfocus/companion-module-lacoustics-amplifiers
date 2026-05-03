@@ -1,12 +1,39 @@
-import type { CompanionFeedbackDefinition, CompanionFeedbackDefinitions } from '@companion-module/base'
+import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { feedbackSubscribe, addUnsubscribe } from './consts.js'
-import { isKeyOf } from '../utils.js'
 
-export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions {
-	const feedbacks: Record<string, CompanionFeedbackDefinition> = {}
+export enum FeedbackIdsPtp {
+	V2Domain = 'ptpV2Domain',
+	Primary = 'ptpPrimary',
+	Secondary = 'ptpSecondary',
+}
+
+type PtpProperties = keyof ModuleInstance['device']['ptpPrimary']
+
+export type FeedbackSchemaPtp = {
+	[FeedbackIdsPtp.V2Domain]: {
+		type: 'value'
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
+	}
+	[FeedbackIdsPtp.Primary]: {
+		type: 'value'
+		options: {
+			prop: PtpProperties
+		}
+	}
+	[FeedbackIdsPtp.Secondary]: {
+		type: 'value'
+		options: {
+			prop: PtpProperties
+		}
+	}
+}
+
+export function getPtpFeedbacks(instance: ModuleInstance): Partial<CompanionFeedbackDefinitions<FeedbackSchemaPtp>> {
+	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaPtp>> = {}
 	if (instance.device.ptpSupported) {
-		feedbacks.ptpV2Domain = {
+		feedbacks[FeedbackIdsPtp.V2Domain] = {
 			name: 'PTP - V2 Domain',
 			type: 'value',
 			options: [],
@@ -15,7 +42,7 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 				return instance.device.ptpV2Domain
 			},
 		}
-		feedbacks.ptpPrimary = {
+		feedbacks[FeedbackIdsPtp.Primary] = {
 			name: 'PTP - Primary',
 			type: 'value',
 			options: [
@@ -34,13 +61,12 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 			],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'ptp')
-				const prop = (feedback.options.prop as string) || 'gm_id'
-				if (isKeyOf(instance.device.ptpPrimary, prop)) return instance.device.ptpPrimary[prop]
-				return null
+				const prop = feedback.options.prop
+				return instance.device.ptpPrimary[prop]
 			},
 		}
 		if (instance.device.ptpSecondarySupported) {
-			feedbacks.ptpSecondary = {
+			feedbacks[FeedbackIdsPtp.Secondary] = {
 				name: 'PTP - Secondary',
 				type: 'value',
 				options: [
@@ -59,9 +85,8 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 				],
 				callback: (feedback, _context) => {
 					feedbackSubscribe(instance, 'ptp')
-					const prop = (feedback.options.prop as string) || 'gm_id'
-					if (isKeyOf(instance.device.ptpSecondary, prop)) return instance.device.ptpSecondary[prop]
-					return null
+					const prop = feedback.options.prop
+					return instance.device.ptpSecondary[prop]
 				},
 			}
 		}

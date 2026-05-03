@@ -8,7 +8,8 @@ export enum ActionIdsPower {
 
 export type ActionSchemaPower = {
 	[ActionIdsPower.Reboot]: {
-		options: Record<string, never>
+		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+		options: {}
 	}
 	[ActionIdsPower.Standby]: {
 		options: {

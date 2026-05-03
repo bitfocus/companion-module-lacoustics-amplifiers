@@ -134,7 +134,7 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 			],
 			callback: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
-				const delay = Number(event.options.delay)
+				const delay = event.options.delay
 
 				await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
 				logger.info(`Channel ${channelNum} delay ${delay} samples`)
@@ -161,7 +161,7 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 				},
 			],
 			callback: async (event) => {
-				const gain = Number(event.options.gain)
+				const gain = event.options.gain
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain)
 				logger.info(`Channel ${channelNum} gain ${gain} dB`)

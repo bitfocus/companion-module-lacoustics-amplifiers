@@ -1,4 +1,4 @@
-## L'Acoustic Amplifiers
+## L'Acoustics Amplifiers
 
 HTTP Rest API
 

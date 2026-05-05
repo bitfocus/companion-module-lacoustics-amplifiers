@@ -2,6 +2,7 @@ import { type CompanionActionDefinitions, createModuleLogger } from '@companion-
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
 import { intRangeLimiter } from '../utils.js'
+import { ensureAllActionKeys } from './consts.js'
 
 export enum ActionIdsControl {
 	DspOutputMute = 'dspOutputMute',
@@ -37,7 +38,7 @@ export type ActionSchemaControl = {
 	}
 }
 
-export function getControlActions(instance: ModuleInstance): Partial<CompanionActionDefinitions<ActionSchemaControl>> {
+export function getControlActions(instance: ModuleInstance): CompanionActionDefinitions<ActionSchemaControl> {
 	const actions: Partial<CompanionActionDefinitions<ActionSchemaControl>> = {}
 	const logger = createModuleLogger('Actions:Control')
 	if (instance.device.outputDspChannelCount > 0) {
@@ -174,5 +175,7 @@ export function getControlActions(instance: ModuleInstance): Partial<CompanionAc
 			},
 		}
 	}
+
+	ensureAllActionKeys(actions, ActionIdsControl)
 	return actions
 }

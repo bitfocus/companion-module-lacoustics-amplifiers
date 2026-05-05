@@ -1,6 +1,6 @@
 import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { feedbackSubscribe, addUnsubscribe } from './consts.js'
+import { feedbackSubscribe, addUnsubscribe, ensureAllFeedbackKeys } from './consts.js'
 
 export enum FeedbackIdsPtp {
 	V2Domain = 'ptpV2Domain',
@@ -30,7 +30,7 @@ export type FeedbackSchemaPtp = {
 	}
 }
 
-export function getPtpFeedbacks(instance: ModuleInstance): Partial<CompanionFeedbackDefinitions<FeedbackSchemaPtp>> {
+export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions<FeedbackSchemaPtp> {
 	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaPtp>> = {}
 	if (instance.device.ptpSupported) {
 		feedbacks[FeedbackIdsPtp.V2Domain] = {
@@ -93,6 +93,6 @@ export function getPtpFeedbacks(instance: ModuleInstance): Partial<CompanionFeed
 	}
 
 	addUnsubscribe(instance, feedbacks, 'ptp')
-
+	ensureAllFeedbackKeys(feedbacks, FeedbackIdsPtp)
 	return feedbacks
 }

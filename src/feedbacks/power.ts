@@ -1,6 +1,6 @@
 import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
+import { styles, feedbackSubscribe, addUnsubscribe, ensureAllFeedbackKeys } from './consts.js'
 
 export enum FeedbackIdsPower {
 	Standby = 'powerStandby',
@@ -37,9 +37,7 @@ export type FeedbackSchemaPower = {
 	}
 }
 
-export function getPowerFeedbacks(
-	instance: ModuleInstance,
-): Partial<CompanionFeedbackDefinitions<FeedbackSchemaPower>> {
+export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions<FeedbackSchemaPower> {
 	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaPower>> = {}
 	if (instance.device.powerCanStandby) {
 		feedbacks[FeedbackIdsPower.Standby] = {
@@ -115,6 +113,6 @@ export function getPowerFeedbacks(
 	}
 
 	addUnsubscribe(instance, feedbacks, 'power')
-
+	ensureAllFeedbackKeys(feedbacks, FeedbackIdsPower)
 	return feedbacks
 }

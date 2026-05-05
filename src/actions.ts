@@ -8,9 +8,9 @@ import { CompanionActionDefinitions } from '@companion-module/base'
 export type ActionSchema = ActionSchemaControl & ActionSchemaPower
 
 export function UpdateActions(self: ModuleInstance): void {
-	const actions: Partial<CompanionActionDefinitions<ActionSchema>> = {
+	const actions: CompanionActionDefinitions<ActionSchema> = {
 		...getControlActions(self),
 		...getPowerActions(self),
 	}
-	self.setActionDefinitions(actions as CompanionActionDefinitions<ActionSchema>)
+	self.setActionDefinitions(actions)
 }

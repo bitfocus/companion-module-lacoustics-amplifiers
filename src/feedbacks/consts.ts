@@ -3,6 +3,7 @@ import {
 	CompanionOptionValues,
 	CompanionFeedbackContext,
 	CompanionFeedbackDefinitions,
+	CompanionFeedbackSchema,
 	CompanionFeedbackInfo,
 } from '@companion-module/base'
 import ModuleInstance from '../main.js'
@@ -54,4 +55,18 @@ export const addUnsubscribe = <
 			feedback.unsubscribe = feedbackUnsubscribe(instance, subscriptionKey)
 		}
 	})
+}
+
+export function ensureAllFeedbackKeys<
+	TSchema extends Record<string, CompanionFeedbackSchema<CompanionOptionValues>>,
+	TEnum extends Record<string, keyof TSchema & string>,
+>(
+	feedbacks: Partial<CompanionFeedbackDefinitions<TSchema>>,
+	feedbackIds: TEnum,
+): asserts feedbacks is CompanionFeedbackDefinitions<TSchema> {
+	for (const key of Object.values(feedbackIds)) {
+		if (!(key in feedbacks)) {
+			;(feedbacks as Record<string, unknown>)[key] = undefined
+		}
+	}
 }

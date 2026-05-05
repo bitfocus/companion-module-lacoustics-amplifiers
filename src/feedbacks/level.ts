@@ -1,7 +1,7 @@
 import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
-import { feedbackSubscribe, addUnsubscribe } from './consts.js'
+import { feedbackSubscribe, addUnsubscribe, ensureAllFeedbackKeys } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 
 export enum FeedbackIdsLevels {
@@ -24,9 +24,7 @@ export type FeedbackSchemaLevels = {
 	}
 }
 
-export function getLevelFeedbacks(
-	instance: ModuleInstance,
-): Partial<CompanionFeedbackDefinitions<FeedbackSchemaLevels>> {
+export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions<FeedbackSchemaLevels> {
 	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaLevels>> = {}
 	if (instance.device.outputDspLevelsCount > 0) {
 		feedbacks.levelsDspOutput = {
@@ -54,6 +52,6 @@ export function getLevelFeedbacks(
 	}
 
 	addUnsubscribe(instance, feedbacks, 'level')
-
+	ensureAllFeedbackKeys(feedbacks, FeedbackIdsLevels)
 	return feedbacks
 }

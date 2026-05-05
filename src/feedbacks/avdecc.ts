@@ -1,6 +1,6 @@
 import { type CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
+import { styles, feedbackSubscribe, addUnsubscribe, ensureAllFeedbackKeys } from './consts.js'
 
 export enum FeedbackIdsAvdecc {
 	Lock = 'avdeccLock',
@@ -20,9 +20,7 @@ export type FeedbackSchemaAvdecc = {
 	}
 }
 
-export function getAvdeccFeedbacks(
-	instance: ModuleInstance,
-): Partial<CompanionFeedbackDefinitions<FeedbackSchemaAvdecc>> {
+export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions<FeedbackSchemaAvdecc> {
 	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaAvdecc>> = {}
 	if (instance.device.avdeccSupported) {
 		feedbacks.avdeccLock = {
@@ -47,6 +45,6 @@ export function getAvdeccFeedbacks(
 	}
 
 	addUnsubscribe(instance, feedbacks, 'avdecc')
-
+	ensureAllFeedbackKeys(feedbacks, FeedbackIdsAvdecc)
 	return feedbacks
 }

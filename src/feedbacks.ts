@@ -7,14 +7,12 @@ import { FeedbackSchemaLevels, getLevelFeedbacks } from './feedbacks/level.js'
 import { FeedbackSchemaPower, getPowerFeedbacks } from './feedbacks/power.js'
 import { FeedbackSchemaPtp, getPtpFeedbacks } from './feedbacks/ptp.js'
 
-export type FeedbackSchema = Partial<
-	FeedbackSchemaAvdecc &
-		FeedbackSchemaClock &
-		FeedbackSchemaControl &
-		FeedbackSchemaLevels &
-		FeedbackSchemaPower &
-		FeedbackSchemaPtp
->
+export type FeedbackSchema = FeedbackSchemaAvdecc &
+	FeedbackSchemaClock &
+	FeedbackSchemaControl &
+	FeedbackSchemaLevels &
+	FeedbackSchemaPower &
+	FeedbackSchemaPtp
 
 export function UpdateFeedbacks(self: ModuleInstance): void {
 	const feedbacks = {

@@ -1,5 +1,6 @@
 import { type CompanionActionDefinitions, createModuleLogger } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
+import { ensureAllActionKeys } from './consts.js'
 
 export enum ActionIdsPower {
 	Reboot = 'reboot',
@@ -18,7 +19,7 @@ export type ActionSchemaPower = {
 	}
 }
 
-export function getPowerActions(instance: ModuleInstance): Partial<CompanionActionDefinitions<ActionSchemaPower>> {
+export function getPowerActions(instance: ModuleInstance): CompanionActionDefinitions<ActionSchemaPower> {
 	const actions: Partial<CompanionActionDefinitions<ActionSchemaPower>> = {}
 	const logger = createModuleLogger('Actions:Power')
 	if (instance.device.powerRebootable) {
@@ -69,5 +70,7 @@ export function getPowerActions(instance: ModuleInstance): Partial<CompanionActi
 			},
 		}
 	}
+
+	ensureAllActionKeys(actions, ActionIdsPower)
 	return actions
 }

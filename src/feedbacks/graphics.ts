@@ -7,7 +7,7 @@ import {
 } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
-import { colors, feedbackSubscribe, addUnsubscribe } from './consts.js'
+import { colors, feedbackSubscribe, addUnsubscribe, ensureAllFeedbackKeys } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 import { graphics } from 'companion-module-utils'
 
@@ -217,9 +217,7 @@ type FeedbackSchemaGraphics = {
 	}
 }
 
-export function getGraphicFeedbacks(
-	instance: ModuleInstance,
-): Partial<CompanionFeedbackDefinitions<FeedbackSchemaGraphics>> {
+export function getGraphicFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions<FeedbackSchemaGraphics> {
 	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaGraphics>> = {}
 
 	if (instance.device.outputDspLevelsCount > 0) {
@@ -241,6 +239,6 @@ export function getGraphicFeedbacks(
 	}
 
 	addUnsubscribe(instance, feedbacks, 'level')
-
+	ensureAllFeedbackKeys(feedbacks, FeedbackIdsGraphics)
 	return feedbacks
 }

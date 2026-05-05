@@ -1,7 +1,7 @@
 import type { CompanionFeedbackDefinitions } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
-import { styles, feedbackSubscribe, addUnsubscribe } from './consts.js'
+import { styles, feedbackSubscribe, addUnsubscribe, ensureAllFeedbackKeys } from './consts.js'
 import { intRangeLimiter } from '../utils.js'
 
 export enum FeedbackIdsControl {
@@ -45,9 +45,7 @@ export type FeedbackSchemaControl = {
 	}
 }
 
-export function getControlFeedbacks(
-	instance: ModuleInstance,
-): Partial<CompanionFeedbackDefinitions<FeedbackSchemaControl>> {
+export function getControlFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions<FeedbackSchemaControl> {
 	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaControl>> = {}
 	if (instance.device.outputDspChannelCount > 0) {
 		feedbacks.dspOutputMute = {
@@ -105,6 +103,6 @@ export function getControlFeedbacks(
 	}
 
 	addUnsubscribe(instance, feedbacks, 'control')
-
+	ensureAllFeedbackKeys(feedbacks, FeedbackIdsControl)
 	return feedbacks
 }

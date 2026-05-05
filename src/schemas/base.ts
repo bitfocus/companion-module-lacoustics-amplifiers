@@ -374,7 +374,7 @@ export const En54OptionsObject = z.object(
 	},
 )
 
-export const En54OptionsSchema = z.union([Enums.En54OptionsEnum, En54OptionsObject])
+export const En54OptionsSchema = z.union([Enums.En54OptionsEnum, En54OptionsObject]) // Changed from ENUM to Object in FW 2.17.2
 
 export const En54Schema = z.object({
 	enable: Bool,

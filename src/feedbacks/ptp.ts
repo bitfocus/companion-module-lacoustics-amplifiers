@@ -13,8 +13,7 @@ type PtpProperties = keyof ModuleInstance['device']['ptpPrimary']
 export type FeedbackSchemaPtp = {
 	[FeedbackIdsPtp.V2Domain]: {
 		type: 'value'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 	[FeedbackIdsPtp.Primary]: {
 		type: 'value'

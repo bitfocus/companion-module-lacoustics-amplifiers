@@ -13,8 +13,7 @@ export enum FeedbackIdsPower {
 export type FeedbackSchemaPower = {
 	[FeedbackIdsPower.Standby]: {
 		type: 'boolean'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 	[FeedbackIdsPower.SmpsStatus]: {
 		type: 'boolean'
@@ -22,18 +21,15 @@ export type FeedbackSchemaPower = {
 	}
 	[FeedbackIdsPower.Dc24vIn]: {
 		type: 'boolean'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 	[FeedbackIdsPower.Dc24vOut]: {
 		type: 'boolean'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 	[FeedbackIdsPower.Mains]: {
 		type: 'boolean'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 }
 

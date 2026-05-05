@@ -11,18 +11,15 @@ export enum FeedbackIdsClock {
 export type FeedbackSchemaClock = {
 	[FeedbackIdsClock.Lock]: {
 		type: 'boolean'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 	[FeedbackIdsClock.Status]: {
 		type: 'value'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 	[FeedbackIdsClock.Type]: {
 		type: 'value'
-		// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-		options: {}
+		options: Record<string, never>
 	}
 }
 

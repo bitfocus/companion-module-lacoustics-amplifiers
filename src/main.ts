@@ -50,6 +50,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		this.#queue.clear()
 		this.#controller.abort()
 		this.#controller = new AbortController()
+		this.#feedbacksToUpdate.clear()
 
 		// Set this.throttledCheckedFeedbacksById() here so that it references the new AbortController
 		this.throttledCheckFeedbacksById = throttle(
@@ -73,6 +74,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			this.updateVariableDefinitions() // export variable definitions
 			this.feedbackSubscriptions.info.add('var')
 			this.updateVariableValues()
+			this.checkAllFeedbacks()
 		} else {
 			this.statusManager.updateStatus(InstanceStatus.BadConfig, 'No Host Configured')
 			return
@@ -134,7 +136,6 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			const response = await this.clientGet('')
 			this.debug(response.data)
 			this.device = LacousticsDevice.fromUnknown(response.data)
-			this.checkAllFeedbacks()
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})
 			}, this.#config.interval ?? 1000)

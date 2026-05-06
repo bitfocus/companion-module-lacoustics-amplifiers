@@ -145,8 +145,10 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	}
 
 	private async pollDevice(): Promise<void> {
+		const { signal } = this.#controller
 		const keysToCheck: FeedbackSubscriptionKey[] = []
 		for (const key of feedbackSubscriptionKeys) {
+			if (signal.aborted) return
 			if (this.feedbackSubscriptions[key].size == 0) continue
 			try {
 				const response = await this.clientGet(key)
@@ -159,6 +161,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 				handleError(err, this)
 			}
 		}
+		if (signal.aborted) return
 		this.checkFeedbackKeys(keysToCheck)
 		this.updateVariableValues()
 		this.#pollTimer = setTimeout(() => {

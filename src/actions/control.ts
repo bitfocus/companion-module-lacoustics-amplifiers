@@ -79,13 +79,12 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				}
 				await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
 				logger.info(`Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
-				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),
 					channelNum,
 					{ mute: newState },
 					'control',
 				)
-				instance.checkFeedbackKeys(keys)
 			},
 			optionsToMonitorForSubscribe: [],
 			subscribe: actionSubscribe(instance, 'control'),
@@ -127,13 +126,12 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				}
 				await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
 				logger.info(`Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)
-				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),
 					channelNum,
 					{ invert: newState },
 					'control',
 				)
-				instance.checkFeedbackKeys(keys)
 			},
 			optionsToMonitorForSubscribe: [],
 			subscribe: actionSubscribe(instance, 'control'),
@@ -169,6 +167,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
+				await instance.queryDevice('control')
 				return {
 					delay: instance.device.outputDspChannels[channelNum - 1].delay,
 				}

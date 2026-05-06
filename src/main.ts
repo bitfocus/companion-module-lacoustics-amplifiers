@@ -134,6 +134,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			const response = await this.clientGet('')
 			this.debug(response.data)
 			this.device = LacousticsDevice.fromUnknown(response.data)
+			this.checkAllFeedbacks()
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})
 			}, this.#config.interval ?? 1000)

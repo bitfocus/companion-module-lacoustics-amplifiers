@@ -220,6 +220,10 @@ export const AesSchema = z.object({
 export const PowerSchema = z.object({
 	reboot: Nullable(z.any()),
 	standby: Bool,
+	mode_req_source: Enums.PowerModeReqSource.optional(),
+	autostandby_mode: Enums.PowerAutoStandbyMode.optional(),
+	autostandby_timeout: Int.min(1).max(3600).optional(),
+	autostandby_threshold: Int.min(-60).max(0).optional(),
 	status: z.object({
 		inp24v: Bool,
 		smps: z.array(

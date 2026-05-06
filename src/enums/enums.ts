@@ -551,3 +551,12 @@ export type MadiOutputFormatEnum = z.infer<typeof MadiOutputFormatEnum>
 
 export const ClockSampleRateEnum = MadiOutputFormatEnum
 export type ClockSampleRateEnum = z.infer<typeof ClockSampleRateEnum>
+
+/* =========================
+ * Power
+ * ========================= */
+export const PowerModeReqSource = z.enum(['unknown', 'external', 'mon', 'error'])
+export type PowerModeReqSource = z.infer<typeof PowerModeReqSource>
+
+export const PowerAutoStandbyMode = z.enum(['off', 'auto_standby', 'auto_stanby_wakeup'])
+export type PowerAutoStandbyMode = z.infer<typeof PowerAutoStandbyMode>

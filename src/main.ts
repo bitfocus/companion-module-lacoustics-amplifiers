@@ -164,11 +164,24 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			}
 		}
 		if (signal.aborted) return
-		this.checkFeedbackKeys(keysToCheck)
+		this.checkFeedbackKeys(...keysToCheck)
 		this.updateVariableValues()
 		this.#pollTimer = setTimeout(() => {
 			this.pollDevice().catch(() => {})
 		}, this.#config.interval ?? 1000)
+	}
+
+	/**
+	 * Trigger a one off query of the device. For action learn callbacks to ensure fresh data
+	 * @param {FeedbackSubscriptionKey} key
+	 */
+
+	public async queryDevice(key: FeedbackSubscriptionKey): Promise<void> {
+		const response = await this.clientGet(key)
+		this.debug(response.data)
+		const data = { [key]: response.data }
+		this.device.devicePartial = data
+		this.checkFeedbackKeys(key)
 	}
 
 	/**
@@ -177,7 +190,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	 */
 	public handlePartialDeviceUpdate(data: unknown): void {
 		const keys = this.device.deviceDeepPartial(data)
-		this.checkFeedbackKeys(keys)
+		this.checkFeedbackKeys(...keys)
 	}
 
 	public handleArrayItemUpdate<TItem extends { index: number }>(
@@ -187,10 +200,10 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		subscriptionKey: FeedbackSubscriptionKey,
 	): void {
 		const keys = this.device.updateArrayItem(getArray, channelIndex, update, subscriptionKey)
-		this.checkFeedbackKeys(keys)
+		this.checkFeedbackKeys(...keys)
 	}
 
-	public checkFeedbackKeys(keys: FeedbackSubscriptionKey[]): void {
+	public checkFeedbackKeys(...keys: FeedbackSubscriptionKey[]): void {
 		if (keys.length == 0) return
 		for (const key of keys) {
 			this.feedbackSubscriptions[key].forEach((id) => {

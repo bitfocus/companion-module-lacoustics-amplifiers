@@ -201,6 +201,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
+				await instance.queryDevice('control')
 				return {
 					gain: instance.device.outputDspChannels[channelNum - 1].gain,
 				}

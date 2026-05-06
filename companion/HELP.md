@@ -2,16 +2,26 @@
 
 HTTP Rest API
 
+### Supported Devices
+
+The module should work with all contemporary L'Acoustics amplifiers, with a minimum firmware of 2.16.
+To date the following devices have been tested and confirmed working:
+
+- LA1.16i
+- LA2Xi
+
+Please confirm functionality or report issues with other devices on the [git repo](https://github.com/bitfocus/companion-module-lacoustics-amplifiers/issues).
+
 Available actions and feedbacks depend on the specific model being controlled
 
 ### Actions
 
-- Reboot
-- Power
 - Output - Delay
 - Output - Gain
 - Output - Mute
 - Output - Polarity
+- Power
+- Reboot
 
 ### Feedbacks
 

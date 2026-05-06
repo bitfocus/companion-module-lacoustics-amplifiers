@@ -26,7 +26,9 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	device!: LacousticsDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
 	feedbackSubscriptions = LacousticsDevice.initFeedbackSubscriptionTracker()
-	throttledCheckFeedbacksById!: ThrottledFunction<() => void>
+	throttledCheckFeedbacksById: ThrottledFunction<() => void> = this.createThrottledFeedbackCheck(
+		this.#controller.signal,
+	)
 	#feedbacksToUpdate: Set<string> = new Set()
 	constructor(internal: unknown) {
 		super(internal)
@@ -54,15 +56,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		this.#feedbacksToUpdate.clear()
 
 		// Set this.throttledCheckedFeedbacksById() here so that it references the new AbortController
-		this.throttledCheckFeedbacksById = throttle(
-			() => {
-				if (this.#feedbacksToUpdate.size === 0) return
-				this.checkFeedbacksById(...Array.from(this.#feedbacksToUpdate))
-				this.#feedbacksToUpdate.clear()
-			},
-			50,
-			{ edges: ['leading', 'trailing'], signal: this.#controller.signal },
-		)
+		this.throttledCheckFeedbacksById = this.createThrottledFeedbackCheck(this.#controller.signal)
 
 		this.#config = config
 		this.#secrets = secrets
@@ -204,6 +198,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	}
 
 	public checkFeedbackKeys(...keys: FeedbackSubscriptionKey[]): void {
+		this.debug(`Checking feedback keys: ${keys.join(', ')}`)
 		if (keys.length == 0) return
 		for (const key of keys) {
 			this.feedbackSubscriptions[key].forEach((id) => {
@@ -213,6 +208,20 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			})
 		}
 		this.throttledCheckFeedbacksById()
+	}
+
+	private createThrottledFeedbackCheck(signal?: AbortSignal): ThrottledFunction<() => void> {
+		return throttle(
+			() => {
+				if (this.#feedbacksToUpdate.size === 0) return
+				const feedbackIds = Array.from(this.#feedbacksToUpdate).filter((id) => !id.startsWith('action_'))
+				this.debug(`Checking ${feedbackIds.length} feedback ids`)
+				this.checkFeedbacksById(...feedbackIds)
+				this.#feedbacksToUpdate.clear()
+			},
+			50,
+			{ edges: ['leading', 'trailing'], signal },
+		)
 	}
 
 	public debug(data: object | string | number): void {

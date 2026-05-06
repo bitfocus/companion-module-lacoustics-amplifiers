@@ -26,8 +26,8 @@ export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackD
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'avdecc')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'avdecc', feedback)
 				return instance.device.avdeccLock
 			},
 		}
@@ -35,8 +35,8 @@ export function getAvdeccFeedbacks(instance: ModuleInstance): CompanionFeedbackD
 			name: 'Avdecc - Entity Id',
 			type: 'value',
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'avdecc')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'avdecc', feedback)
 				return instance.device.avdeccEntityId
 			},
 		}

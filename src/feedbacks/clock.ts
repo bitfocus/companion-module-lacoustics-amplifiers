@@ -31,8 +31,8 @@ export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'clock')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'clock', feedback)
 				return instance.device.clockLocked
 			},
 		}
@@ -40,8 +40,8 @@ export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			name: 'Clock - Status',
 			type: 'value',
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'clock')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'clock', feedback)
 				return instance.device.clockStatus
 			},
 		}
@@ -49,8 +49,8 @@ export function getClockFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			name: 'Clock - Type',
 			type: 'value',
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'clock')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'clock', feedback)
 				return instance.device.clockType
 			},
 		}

@@ -33,14 +33,13 @@ export const styles = {
 	},
 }
 
-export const feedbackSubscribe =
-	(instance: ModuleInstance, type: FeedbackSubscriptionKey) =>
-	(
-		feedback: CompanionFeedbackAdvancedEvent | CompanionFeedbackBooleanEvent | CompanionFeedbackValueEvent,
-		_context: CompanionFeedbackContext,
-	): void => {
-		instance.feedbackSubscriptions[type].add(feedback.id)
-	}
+export const feedbackSubscribe = (
+	instance: ModuleInstance,
+	type: FeedbackSubscriptionKey,
+	feedback: CompanionFeedbackAdvancedEvent | CompanionFeedbackBooleanEvent | CompanionFeedbackValueEvent,
+): void => {
+	instance.feedbackSubscriptions[type].add(feedback.id)
+}
 
 export const feedbackUnsubscribe =
 	(instance: ModuleInstance, type: FeedbackSubscriptionKey) =>

@@ -146,7 +146,7 @@ const createLevelMeterFeedback = (
 	],
 	callback: async (feedback, _context) => {
 		const logger = createModuleLogger(`Feedbacks:${name}`)
-		feedbackSubscribe(instance, 'level')
+		feedbackSubscribe(instance, 'level', feedback)
 		if (!('image' in feedback) || feedback.image === undefined) {
 			logger.warn(`Feedback ${feedback.id} does not support images`)
 			return {}

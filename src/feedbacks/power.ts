@@ -41,8 +41,8 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'power')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'power', feedback)
 				return instance.device.powerStandby
 			},
 		}
@@ -66,7 +66,7 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 				},
 			],
 			callback: (feedback, _context) => {
-				feedbackSubscribe(instance, 'power')
+				feedbackSubscribe(instance, 'power', feedback)
 				return instance.device.powerSmpsStatus[Number(feedback.options.psu ?? 1)]
 			},
 		}
@@ -77,8 +77,8 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'power')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'power', feedback)
 				return instance.device.power24vIn
 			},
 		}
@@ -89,8 +89,8 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'power')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'power', feedback)
 				return instance.device.power24vOut
 			},
 		}
@@ -101,8 +101,8 @@ export function getPowerFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'boolean',
 			defaultStyle: styles.blackOnRed,
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'power')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'power', feedback)
 				return instance.device.powerMains
 			},
 		}

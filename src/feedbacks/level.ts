@@ -32,7 +32,7 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'value',
 			options: [ChannelOption(instance.device.outputDspLevelsCount)],
 			callback: (feedback, _context) => {
-				feedbackSubscribe(instance, 'level')
+				feedbackSubscribe(instance, 'level', feedback)
 				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.outputDspChannelCount)
 				return instance.device.outputDspLevels[channelNum - 1].peak
 			},
@@ -44,7 +44,7 @@ export function getLevelFeedbacks(instance: ModuleInstance): CompanionFeedbackDe
 			type: 'value',
 			options: [ChannelOption(instance.device.inputDspLevelsCount)],
 			callback: (feedback, _context) => {
-				feedbackSubscribe(instance, 'level')
+				feedbackSubscribe(instance, 'level', feedback)
 				const channelNum = intRangeLimiter(feedback.options.channel, 1, instance.device.inputDspLevelsCount)
 				return instance.device.inputDspLevels[channelNum - 1].peak
 			},

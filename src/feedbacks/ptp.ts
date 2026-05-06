@@ -36,8 +36,8 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 			name: 'PTP - V2 Domain',
 			type: 'value',
 			options: [],
-			callback: (_feedback, _context) => {
-				feedbackSubscribe(instance, 'ptp')
+			callback: (feedback, _context) => {
+				feedbackSubscribe(instance, 'ptp', feedback)
 				return instance.device.ptpV2Domain
 			},
 		}
@@ -59,7 +59,7 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 				},
 			],
 			callback: (feedback, _context) => {
-				feedbackSubscribe(instance, 'ptp')
+				feedbackSubscribe(instance, 'ptp', feedback)
 				const prop = feedback.options.prop
 				return instance.device.ptpPrimary[prop]
 			},
@@ -83,7 +83,7 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 					},
 				],
 				callback: (feedback, _context) => {
-					feedbackSubscribe(instance, 'ptp')
+					feedbackSubscribe(instance, 'ptp', feedback)
 					const prop = feedback.options.prop
 					return instance.device.ptpSecondary[prop]
 				},

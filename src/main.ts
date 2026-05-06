@@ -12,6 +12,7 @@ import { FeedbackSubscriptionKey, feedbackSubscriptionKeys, type InstanceBaseExt
 import axios, { AxiosInstance, type AxiosResponse } from 'axios'
 import PQueue from 'p-queue'
 import { throttle, type ThrottledFunction } from 'es-toolkit'
+import { DeviceSchemasByName } from './schemas/index.js'
 
 export { UpgradeScripts }
 
@@ -176,6 +177,16 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	 */
 	public handlePartialDeviceUpdate(data: unknown): void {
 		const keys = this.device.deviceDeepPartial(data)
+		this.checkFeedbackKeys(keys)
+	}
+
+	public handleArrayItemUpdate<TItem extends { index: number }>(
+		getArray: (device: DeviceSchemasByName[Enums.InfoNameEnum]) => TItem[] | undefined,
+		channelIndex: number,
+		update: Partial<TItem>,
+		subscriptionKey: FeedbackSubscriptionKey,
+	): void {
+		const keys = this.device.updateArrayItem(getArray, channelIndex, update, subscriptionKey)
 		this.checkFeedbackKeys(keys)
 	}
 

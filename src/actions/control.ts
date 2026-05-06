@@ -160,13 +160,12 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 
 				await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
 				logger.info(`Channel ${channelNum} delay ${delay} samples`)
-				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),
 					channelNum,
 					{ delay: delay },
 					'control',
 				)
-				instance.checkFeedbackKeys(keys)
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
@@ -194,13 +193,12 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain)
 				logger.info(`Channel ${channelNum} gain ${gain} dB`)
-				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),
 					channelNum,
 					{ gain: gain },
 					'control',
 				)
-				instance.checkFeedbackKeys(keys)
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)

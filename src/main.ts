@@ -8,7 +8,7 @@ import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticsDevice } from './device.js'
 import { StatusManager } from './status.js'
 import * as Enums from './enums/enums.js'
-import { feedbackSubscriptionKeys, type InstanceBaseExt, type ModuleTypes } from './types.js'
+import { FeedbackSubscriptionKey, feedbackSubscriptionKeys, type InstanceBaseExt, type ModuleTypes } from './types.js'
 import axios, { AxiosInstance, type AxiosResponse } from 'axios'
 import PQueue from 'p-queue'
 import { throttle, type ThrottledFunction } from 'es-toolkit'
@@ -144,6 +144,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	}
 
 	private async pollDevice(): Promise<void> {
+		const keysToCheck: FeedbackSubscriptionKey[] = []
 		for (const key of feedbackSubscriptionKeys) {
 			if (this.feedbackSubscriptions[key].size == 0) continue
 			try {
@@ -151,21 +152,38 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 				this.debug(response.data)
 				const data = { [key]: response.data }
 				this.device.devicePartial = data
-				this.feedbackSubscriptions[key].forEach((id) => {
-					if (id !== 'var' && !id.startsWith('action')) {
-						this.#feedbacksToUpdate.add(id)
-					}
-				})
-				this.throttledCheckFeedbacksById()
+				keysToCheck.push(key)
 			} catch (err) {
 				this.log('warn', 'Polling error')
 				handleError(err, this)
 			}
 		}
+		this.checkFeedbackKeys(keysToCheck)
 		this.updateVariableValues()
 		this.#pollTimer = setTimeout(() => {
 			this.pollDevice().catch(() => {})
 		}, this.#config.interval ?? 1000)
+	}
+
+	/**
+	 * Use this function for optimistic device and feedback updates from actions
+	 * @param {unknown} data Some deep partial data to be updated
+	 */
+	public handlePartialDeviceUpdate(data: unknown): void {
+		const keys = this.device.deviceDeepPartial(data)
+		this.checkFeedbackKeys(keys)
+	}
+
+	public checkFeedbackKeys(keys: FeedbackSubscriptionKey[]): void {
+		if (keys.length == 0) return
+		for (const key of keys) {
+			this.feedbackSubscriptions[key].forEach((id) => {
+				if (id !== 'var' && !id.startsWith('action_')) {
+					this.#feedbacksToUpdate.add(id)
+				}
+			})
+		}
+		this.throttledCheckFeedbacksById()
 	}
 
 	public debug(data: object | string | number): void {

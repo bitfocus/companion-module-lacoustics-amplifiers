@@ -3,6 +3,7 @@ import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
 import { intRangeLimiter } from '../utils.js'
 import { actionSubscribe, actionUnsubscribe, ensureAllActionKeys } from './consts.js'
+import { ControlDspOutputSchema } from '../schemas/base.js'
 
 export enum ActionIdsControl {
 	DspOutputMute = 'dspOutputMute',
@@ -78,6 +79,13 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				}
 				await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
 				logger.info(`Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
+				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+					(d) => ('control' in d ? d.control.dsp.output : undefined),
+					channelNum,
+					{ mute: newState },
+					'control',
+				)
+				instance.checkFeedbackKeys(keys)
 			},
 			optionsToMonitorForSubscribe: [],
 			subscribe: actionSubscribe(instance, 'control'),
@@ -119,6 +127,13 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				}
 				await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
 				logger.info(`Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)
+				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+					(d) => ('control' in d ? d.control.dsp.output : undefined),
+					channelNum,
+					{ invert: newState },
+					'control',
+				)
+				instance.checkFeedbackKeys(keys)
 			},
 			optionsToMonitorForSubscribe: [],
 			subscribe: actionSubscribe(instance, 'control'),
@@ -145,6 +160,13 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 
 				await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
 				logger.info(`Channel ${channelNum} delay ${delay} samples`)
+				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+					(d) => ('control' in d ? d.control.dsp.output : undefined),
+					channelNum,
+					{ delay: delay },
+					'control',
+				)
+				instance.checkFeedbackKeys(keys)
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
@@ -172,6 +194,13 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain)
 				logger.info(`Channel ${channelNum} gain ${gain} dB`)
+				const keys = instance.device.updateArrayItem<ControlDspOutputSchema>(
+					(d) => ('control' in d ? d.control.dsp.output : undefined),
+					channelNum,
+					{ gain: gain },
+					'control',
+				)
+				instance.checkFeedbackKeys(keys)
 			},
 			learn: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)

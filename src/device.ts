@@ -3,7 +3,9 @@ import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './sche
 import { DeviceSchemasByName } from './schemas/index.js'
 import * as Schemas from './schemas/base.js'
 import * as Enums from './enums/enums.js'
-import { feedbackSubscriptions } from './types.js'
+import { feedbackSubscriptionKeys, FeedbackSubscriptionKey, feedbackSubscriptions } from './types.js'
+import { toMerged } from 'es-toolkit'
+import { zx } from '@traversable/zod'
 
 function isValidInfoName(name: unknown): name is Enums.InfoNameEnum {
 	return typeof name === 'string' && name in DeviceSchemasByName
@@ -74,6 +76,29 @@ export class LacousticsDevice<N extends Enums.InfoNameEnum> {
 		const newDevice = DeviceSchemasByName[this.#device.info.name].partial().parse(device)
 		this.#device = { ...this.#device, ...newDevice }
 		this.#logger.debug(`Updating ${Object.keys(newDevice)}`)
+	}
+
+	public deviceDeepPartial(device: unknown): FeedbackSubscriptionKey[] {
+		const newDevice = zx.deepPartial(DeviceSchemasByName[this.#device.info.name]).parse(device)
+		this.#device = toMerged(this.#device, newDevice)
+		this.#logger.debug(`Deep partial update on: ${Object.keys(newDevice)}`)
+		return Object.keys(newDevice).filter((key): key is FeedbackSubscriptionKey =>
+			feedbackSubscriptionKeys.includes(key as FeedbackSubscriptionKey),
+		)
+	}
+
+	public updateArrayItem<TItem extends { index: number }>(
+		getArray: (device: DeviceSchemasByName[N]) => TItem[] | undefined,
+		channelIndex: number,
+		update: Partial<TItem>,
+		subscriptionKey: FeedbackSubscriptionKey,
+	): FeedbackSubscriptionKey[] {
+		const arr = getArray(this.#device)
+		if (arr === undefined) return []
+		const idx = arr.findIndex((o) => o.index === channelIndex)
+		if (idx === -1) return []
+		arr[idx] = { ...arr[idx], ...update }
+		return [subscriptionKey]
 	}
 
 	get name(): string {

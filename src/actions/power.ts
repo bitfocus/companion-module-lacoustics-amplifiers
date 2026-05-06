@@ -66,6 +66,7 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 				}
 				await instance.clientPost('/power/standby', newState)
 				logger.info(`Powering ${newState ? 'off' : 'on'}`)
+				instance.handlePartialDeviceUpdate({ power: { standby: newState } })
 			},
 			optionsToMonitorForSubscribe: [],
 			subscribe: actionSubscribe(instance, 'power'),

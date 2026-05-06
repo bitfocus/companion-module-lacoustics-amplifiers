@@ -381,6 +381,62 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@traversable/json@npm:^0.0.52":
+  version: 0.0.52
+  resolution: "@traversable/json@npm:0.0.52"
+  peerDependencies:
+    "@traversable/registry": ^0.0.49
+    fast-check: 3 - 4
+  peerDependenciesMeta:
+    "@traversable/registry":
+      optional: false
+    fast-check:
+      optional: true
+  checksum: 10c0/9a41cad5102309a6ec70eb3ba8c12f21adec4c160adc38843f5a111d9e1ed36075bc1974f713362fa968bf4f386e6c50409529b67a0ffdd13e2effbfee2e7826
+  languageName: node
+  linkType: hard
+
+"@traversable/registry@npm:^0.0.49":
+  version: 0.0.49
+  resolution: "@traversable/registry@npm:0.0.49"
+  checksum: 10c0/dbdb986388680174689a8c0a74c084013bad9c08ddf58510c4a6a43e736fa3cb74dfb52266c9a76adfc91007bd0008dbe84a5eeb09478fae3968d34c82081cec
+  languageName: node
+  linkType: hard
+
+"@traversable/zod-types@npm:^0.0.30":
+  version: 0.0.30
+  resolution: "@traversable/zod-types@npm:0.0.30"
+  peerDependencies:
+    "@traversable/json": ^0.0.52
+    "@traversable/registry": ^0.0.49
+    zod: 4
+  peerDependenciesMeta:
+    "@traversable/json":
+      optional: false
+    "@traversable/registry":
+      optional: false
+    zod:
+      optional: false
+  checksum: 10c0/cd0627d5272046c611ff8cc23d37c8210fc383d65335e9df00c0692646adc15df4eda84066b875be43ac7569d66682bba746c6b39a9fe31f603907d1bbb82abf
+  languageName: node
+  linkType: hard
+
+"@traversable/zod@npm:^0.0.57":
+  version: 0.0.57
+  resolution: "@traversable/zod@npm:0.0.57"
+  dependencies:
+    "@traversable/json": "npm:^0.0.52"
+    "@traversable/registry": "npm:^0.0.49"
+    "@traversable/zod-types": "npm:^0.0.30"
+  peerDependencies:
+    zod: 4
+  peerDependenciesMeta:
+    zod:
+      optional: false
+  checksum: 10c0/00ec4018b3e4e401e32016da268d997c2b1f8c14998761b69103b40e8f3a9de00ef53ef6de425dfbf5eb77d84b06803c777758f7ef4ddc521eee69eda753710d
+  languageName: node
+  linkType: hard
+
 "@types/estree@npm:^1.0.6":
   version: 1.0.8
   resolution: "@types/estree@npm:1.0.8"
@@ -1602,6 +1658,7 @@ __metadata:
   dependencies:
     "@companion-module/base": "npm:~2.0.4"
     "@companion-module/tools": "npm:^3.0.1"
+    "@traversable/zod": "npm:^0.0.57"
     "@types/node": "npm:^22.19.17"
     axios: "npm:^1.16.0"
     companion-module-utils: "npm:^0.5.0"

@@ -152,7 +152,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 				const data = { [key]: response.data }
 				this.device.devicePartial = data
 				this.feedbackSubscriptions[key].forEach((id) => {
-					if (id !== 'var') {
+					if (id !== 'var' && !id.startsWith('action')) {
 						this.#feedbacksToUpdate.add(id)
 					}
 				})

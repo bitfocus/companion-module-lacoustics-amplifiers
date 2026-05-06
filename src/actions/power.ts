@@ -1,6 +1,6 @@
 import { type CompanionActionDefinitions, createModuleLogger } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
-import { ensureAllActionKeys } from './consts.js'
+import { actionSubscribe, actionUnsubscribe, ensureAllActionKeys } from './consts.js'
 
 export enum ActionIdsPower {
 	Reboot = 'reboot',
@@ -67,6 +67,9 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 				await instance.clientPost('/power/standby', newState)
 				logger.info(`Powering ${newState ? 'off' : 'on'}`)
 			},
+			optionsToMonitorForSubscribe: [],
+			subscribe: actionSubscribe(instance, 'power'),
+			unsubscribe: actionUnsubscribe(instance, 'power'),
 		}
 	}
 

@@ -2,7 +2,7 @@ import { type CompanionActionDefinitions, createModuleLogger } from '@companion-
 import type ModuleInstance from '../main.js'
 import { ChannelOption } from '../options.js'
 import { intRangeLimiter } from '../utils.js'
-import { ensureAllActionKeys } from './consts.js'
+import { actionSubscribe, actionUnsubscribe, ensureAllActionKeys } from './consts.js'
 
 export enum ActionIdsControl {
 	DspOutputMute = 'dspOutputMute',
@@ -79,6 +79,9 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
 				logger.info(`Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
 			},
+			optionsToMonitorForSubscribe: [],
+			subscribe: actionSubscribe(instance, 'control'),
+			unsubscribe: actionUnsubscribe(instance, 'control'),
 		}
 		actions[ActionIdsControl.DspOutputPolarity] = {
 			name: 'Output - Polarity',
@@ -117,6 +120,9 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 				await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
 				logger.info(`Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)
 			},
+			optionsToMonitorForSubscribe: [],
+			subscribe: actionSubscribe(instance, 'control'),
+			unsubscribe: actionUnsubscribe(instance, 'control'),
 		}
 		actions[ActionIdsControl.DspOutputDelay] = {
 			name: 'Output - Delay',

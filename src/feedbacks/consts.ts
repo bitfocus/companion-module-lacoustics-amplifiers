@@ -5,6 +5,9 @@ import {
 	CompanionFeedbackDefinitions,
 	CompanionFeedbackSchema,
 	CompanionFeedbackInfo,
+	CompanionFeedbackAdvancedEvent,
+	CompanionFeedbackBooleanEvent,
+	CompanionFeedbackValueEvent,
 } from '@companion-module/base'
 import ModuleInstance from '../main.js'
 import { FeedbackSubscriptionKey } from '../types.js'
@@ -32,7 +35,10 @@ export const styles = {
 
 export const feedbackSubscribe =
 	(instance: ModuleInstance, type: FeedbackSubscriptionKey) =>
-	(feedback: CompanionFeedbackInfo, _context: CompanionFeedbackContext): void => {
+	(
+		feedback: CompanionFeedbackAdvancedEvent | CompanionFeedbackBooleanEvent | CompanionFeedbackValueEvent,
+		_context: CompanionFeedbackContext,
+	): void => {
 		instance.feedbackSubscriptions[type].add(feedback.id)
 	}
 

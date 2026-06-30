@@ -23,7 +23,7 @@ export const actionUnsubscribe =
 	}
 
 export function ensureAllActionKeys<
-	TSchema extends Record<string, CompanionActionSchema<CompanionOptionValues>>,
+	TSchema extends Record<string, CompanionActionSchema<CompanionOptionValues, undefined>>,
 	TEnum extends Record<string, keyof TSchema & string>,
 >(
 	actions: Partial<CompanionActionDefinitions<TSchema>>,

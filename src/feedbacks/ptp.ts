@@ -1,4 +1,4 @@
-import type { CompanionFeedbackDefinitions } from '@companion-module/base'
+import type { CompanionFeedbackDefinitions, CompanionInputFieldDropdown } from '@companion-module/base'
 import type ModuleInstance from '../main.js'
 import { feedbackSubscribe, addUnsubscribe, ensureAllFeedbackKeys } from './consts.js'
 
@@ -29,6 +29,19 @@ export type FeedbackSchemaPtp = {
 	}
 }
 
+const ptpProp = {
+	id: 'prop',
+	type: 'dropdown',
+	label: 'property',
+	default: 'gm_id',
+	choices: [
+		{ id: 'gm_id', label: 'GM ID' },
+		{ id: 'priority1', label: 'Priority 1' },
+		{ id: 'priority2', label: 'Priority 2' },
+		{ id: 'as_path_length', label: 'Path Length' },
+	],
+} as const satisfies CompanionInputFieldDropdown<'prop', PtpProperties>
+
 export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefinitions<FeedbackSchemaPtp> {
 	const feedbacks: Partial<CompanionFeedbackDefinitions<FeedbackSchemaPtp>> = {}
 	if (instance.device.ptpSupported) {
@@ -44,20 +57,7 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 		feedbacks[FeedbackIdsPtp.Primary] = {
 			name: 'PTP - Primary',
 			type: 'value',
-			options: [
-				{
-					id: 'prop',
-					type: 'dropdown',
-					label: 'property',
-					default: 'gm_id',
-					choices: [
-						{ id: 'gm_id', label: 'GM ID' },
-						{ id: 'priority1', label: 'Priority 1' },
-						{ id: 'priority2', label: 'Priority 2' },
-						{ id: 'as_path_length', label: 'Path Length' },
-					],
-				},
-			],
+			options: [ptpProp],
 			callback: (feedback, _context) => {
 				feedbackSubscribe(instance, 'ptp', feedback)
 				const prop = feedback.options.prop
@@ -68,20 +68,7 @@ export function getPtpFeedbacks(instance: ModuleInstance): CompanionFeedbackDefi
 			feedbacks[FeedbackIdsPtp.Secondary] = {
 				name: 'PTP - Secondary',
 				type: 'value',
-				options: [
-					{
-						id: 'prop',
-						type: 'dropdown',
-						label: 'property',
-						default: 'gm_id',
-						choices: [
-							{ id: 'gm_id', label: 'GM ID' },
-							{ id: 'priority1', label: 'Priority 1' },
-							{ id: 'priority2', label: 'Priority 2' },
-							{ id: 'as_path_length', label: 'Path Length' },
-						],
-					},
-				],
+				options: [ptpProp],
 				callback: (feedback, _context) => {
 					feedbackSubscribe(instance, 'ptp', feedback)
 					const prop = feedback.options.prop

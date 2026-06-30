@@ -119,6 +119,7 @@ const createLevelMeterFeedback = (
 ): CompanionAdvancedFeedbackDefinition<LevelMeterOptionsSchema> => ({
 	name,
 	type: 'advanced',
+	affectedProperties: ['imageBuffer'],
 	options: [
 		ChannelOption(channelCount),
 		positionOption,

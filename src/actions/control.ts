@@ -61,7 +61,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 			],
 			callback: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
-				let newState = false
+				let newState: boolean
 				switch (event.options.state) {
 					case 'mute':
 						newState = true
@@ -108,7 +108,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 			],
 			callback: async (event) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
-				let newState = false
+				let newState: boolean
 				switch (event.options.state) {
 					case 'invert':
 						newState = true

@@ -1,6 +1,6 @@
 {
 	"name": "lacoustics-amplifiers",
-	"version": "0.5.4",
+	"version": "0.5.5",
 	"main": "dist/main.js",
 	"type": "module",
 	"scripts": {

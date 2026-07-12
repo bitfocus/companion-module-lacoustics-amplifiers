@@ -48,7 +48,7 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 				},
 			],
 			callback: async (event) => {
-				let newState = false
+				let newState: boolean
 				switch (event.options.state) {
 					case 'standby':
 						newState = true

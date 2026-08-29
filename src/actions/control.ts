@@ -59,7 +59,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 					default: 'on',
 				},
 			],
-			callback: async (event) => {
+			callback: async (event, context) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				let newState: boolean
 				switch (event.options.state) {
@@ -77,7 +77,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 						return _exhaustiveCheck
 					}
 				}
-				await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState)
+				await instance.clientPost(`/control/dsp/output/${channelNum}/mute`, newState, context.signal)
 				logger.info(`Channel ${channelNum} Mute ${newState ? 'on' : 'off'}`)
 				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),
@@ -106,7 +106,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 					default: 'normal',
 				},
 			],
-			callback: async (event) => {
+			callback: async (event, context) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				let newState: boolean
 				switch (event.options.state) {
@@ -124,7 +124,7 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 						return _exhaustiveCheck
 					}
 				}
-				await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState)
+				await instance.clientPost(`/control/dsp/output/${channelNum}/invert`, newState, context.signal)
 				logger.info(`Channel ${channelNum} Polarity ${newState ? 'inverted' : 'normal'}`)
 				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),
@@ -152,11 +152,11 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 					asInteger: true,
 				},
 			],
-			callback: async (event) => {
+			callback: async (event, context) => {
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
 				const delay = event.options.delay
 
-				await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay)
+				await instance.clientPost(`/control/dsp/output/${channelNum}/delay`, delay, context.signal)
 				logger.info(`Channel ${channelNum} delay ${delay} samples`)
 				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),
@@ -187,10 +187,10 @@ export function getControlActions(instance: ModuleInstance): CompanionActionDefi
 					description: 'Output gain in dB',
 				},
 			],
-			callback: async (event) => {
+			callback: async (event, context) => {
 				const gain = event.options.gain
 				const channelNum = intRangeLimiter(event.options.channel, 1, instance.device.outputDspChannelCount)
-				await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain)
+				await instance.clientPost(`/control/dsp/output/${channelNum}/gain`, gain, context.signal)
 				logger.info(`Channel ${channelNum} gain ${gain} dB`)
 				instance.handleArrayItemUpdate<ControlDspOutputSchema>(
 					(d) => ('control' in d ? d.control.dsp.output : undefined),

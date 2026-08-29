@@ -94,33 +94,54 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		this.debug(`Axios client initialised`)
 	}
 
-	public async clientGet(url: string): Promise<AxiosResponse<any, any>> {
+	/**
+	 * Combine an optional caller supplied signal with the instance's own abort signal, so that a request is aborted
+	 * by whichever fires first
+	 * @param {AbortSignal} [signal] Optional signal from the caller, eg an action or feedback context signal
+	 * @returns {AbortSignal} The instance signal, or a signal that aborts when either signal aborts
+	 */
+	private combineSignal(signal?: AbortSignal): AbortSignal {
+		return signal ? AbortSignal.any([this.#controller.signal, signal]) : this.#controller.signal
+	}
+
+	/**
+	 * Queue a GET request to the device
+	 * @param {string} url Url relative to the client's baseURL
+	 * @param {AbortSignal} [signal] Optional signal, combined with the instance's abort signal
+	 */
+	public async clientGet(url: string, signal?: AbortSignal): Promise<AxiosResponse<any, any>> {
 		return await this.#queue.add(
-			async ({ signal }) => {
+			async ({ signal: requestSignal }) => {
 				if (!this.#client) throw new Error('Axios Client not initialised')
-				const response = await this.#client.get(url, { signal: signal })
+				const response = await this.#client.get(url, { signal: requestSignal })
 				this.debug(response.data)
 				this.statusManager.updateStatus(InstanceStatus.Ok)
 				return response
 			},
 			{
-				signal: this.#controller.signal,
+				signal: this.combineSignal(signal),
 				priority: 0,
 			},
 		)
 	}
 
-	public async clientPost(url: string, data: unknown): Promise<AxiosResponse<any, any>> {
+	/**
+	 * Queue a POST request to the device
+	 * @param {string} url Url relative to the client's baseURL
+	 * @param {unknown} data Payload to post
+	 * @param {AbortSignal} [signal] Optional signal, combined with the instance's abort signal
+	 */
+	public async clientPost(url: string, data: unknown, signal?: AbortSignal): Promise<AxiosResponse<any, any>> {
 		return await this.#queue.add(
-			async ({ signal }) => {
+			async ({ signal: requestSignal }) => {
 				if (!this.#client) throw new Error('Axios Client not initialised')
-				const response = await this.#client.post(url, data, { signal: signal })
+				const response = await this.#client.post(url, data, { signal: requestSignal })
 				this.debug(response.data)
 				this.statusManager.updateStatus(InstanceStatus.Ok)
 				return response
 			},
 			{
-				signal: this.#controller.signal,
+				signal: this.combineSignal(signal),
 				priority: 1,
 			},
 		)

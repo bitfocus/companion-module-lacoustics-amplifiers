@@ -25,8 +25,8 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 		actions[ActionIdsPower.Reboot] = {
 			name: 'Power - Reboot',
 			options: [],
-			callback: async (_event) => {
-				await instance.clientPost('/power/reboot', true)
+			callback: async (_event, context) => {
+				await instance.clientPost('/power/reboot', true, context.signal)
 				logger.info(`Rebooting...`)
 			},
 		}
@@ -47,7 +47,7 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 					default: 'standby',
 				},
 			],
-			callback: async (event) => {
+			callback: async (event, context) => {
 				let newState: boolean
 				switch (event.options.state) {
 					case 'standby':
@@ -64,7 +64,7 @@ export function getPowerActions(instance: ModuleInstance): CompanionActionDefini
 						return _exhaustiveCheck
 					}
 				}
-				await instance.clientPost('/power/standby', newState)
+				await instance.clientPost('/power/standby', newState, context.signal)
 				logger.info(`Powering ${newState ? 'off' : 'on'}`)
 				instance.handlePartialDeviceUpdate({ power: { standby: newState } })
 			},

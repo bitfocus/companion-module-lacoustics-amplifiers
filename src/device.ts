@@ -1,11 +1,10 @@
 import { createModuleLogger } from '@companion-module/base'
 import type { ControlDspOutputSchema, InfoSchema, LevelPeakSchema } from './schemas/base.js'
-import { DeviceSchemasByName } from './schemas/index.js'
+import { deepPartialDeviceSchema, DeviceSchemasByName, partialDeviceSchema } from './schemas/index.js'
 import * as Schemas from './schemas/base.js'
 import * as Enums from './enums/enums.js'
 import { feedbackSubscriptionKeys, FeedbackSubscriptionKey, feedbackSubscriptions } from './types.js'
 import { toMerged } from 'es-toolkit'
-import { zx } from '@traversable/zod'
 
 function isValidInfoName(name: unknown): name is Enums.InfoNameEnum {
 	return typeof name === 'string' && name in DeviceSchemasByName
@@ -73,13 +72,13 @@ export class LacousticsDevice<N extends Enums.InfoNameEnum> {
 	}
 
 	set devicePartial(device: unknown) {
-		const newDevice = DeviceSchemasByName[this.#device.info.name].partial().parse(device)
+		const newDevice = partialDeviceSchema(this.#device.info.name).parse(device)
 		this.#device = { ...this.#device, ...newDevice }
 		this.#logger.debug(`Updating ${Object.keys(newDevice)}`)
 	}
 
 	public deviceDeepPartial(device: unknown): FeedbackSubscriptionKey[] {
-		const newDevice = zx.deepPartial(DeviceSchemasByName[this.#device.info.name]).parse(device)
+		const newDevice = deepPartialDeviceSchema(this.#device.info.name).parse(device)
 		this.#device = toMerged(this.#device, newDevice)
 		this.#logger.debug(`Deep partial update on: ${Object.keys(newDevice)}`)
 		return Object.keys(newDevice).filter((key): key is FeedbackSubscriptionKey =>

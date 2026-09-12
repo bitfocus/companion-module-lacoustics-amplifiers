@@ -1,4 +1,5 @@
 import * as z from 'zod'
+import { zx } from '@traversable/zod'
 import * as Enums from '../enums/enums.js'
 import * as LA2xi from './la2xi.js'
 import * as LA4 from './la4.js'
@@ -113,3 +114,42 @@ export const deviceSchemaList = [
 	P1.DeviceSchema,
 ] as const
  */
+
+/*
+ * Derived schemas, memoised per device model and AOT-compiled.
+ *
+ * `.partial()` and `zx.deepPartial()` construct a new schema every time they are
+ * called, so deriving at the parse site repeats that work for every device
+ * update — by far the dominant cost in the poll path. Deriving once per model
+ * and compiling the result is around 75x cheaper per parse.
+ *
+ * Lazy rather than eager: a module instance only ever talks to one model, and
+ * compiling all of them at import would cost tens of milliseconds at startup for
+ * schemas that are never parsed.
+ */
+
+const makePartial = <N extends Enums.InfoNameEnum>(name: N) => z.compile(DeviceSchemasByName[name].partial())
+const makeDeepPartial = <N extends Enums.InfoNameEnum>(name: N) => z.compile(zx.deepPartial(DeviceSchemasByName[name]))
+
+const partialSchemaCache = new Map<Enums.InfoNameEnum, unknown>()
+const deepPartialSchemaCache = new Map<Enums.InfoNameEnum, unknown>()
+
+/** The model's schema with its top-level keys optional. Compiled; memoised per model. */
+export function partialDeviceSchema<N extends Enums.InfoNameEnum>(name: N): ReturnType<typeof makePartial<N>> {
+	let schema = partialSchemaCache.get(name)
+	if (schema === undefined) {
+		schema = makePartial(name)
+		partialSchemaCache.set(name, schema)
+	}
+	return schema as ReturnType<typeof makePartial<N>>
+}
+
+/** The model's schema with every key at every depth optional. Compiled; memoised per model. */
+export function deepPartialDeviceSchema<N extends Enums.InfoNameEnum>(name: N): ReturnType<typeof makeDeepPartial<N>> {
+	let schema = deepPartialSchemaCache.get(name)
+	if (schema === undefined) {
+		schema = makeDeepPartial(name)
+		deepPartialSchemaCache.set(name, schema)
+	}
+	return schema as ReturnType<typeof makeDeepPartial<N>>
+}

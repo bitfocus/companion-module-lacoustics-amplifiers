@@ -6,3 +6,6 @@ package-lock.json
 DEBUG-*
 /.yarn
 /.vscode
+
+# Test coverage
+coverage

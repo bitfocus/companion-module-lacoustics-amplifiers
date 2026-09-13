@@ -4,7 +4,7 @@ export type ModuleConfig = {
 	host: string
 	auth: boolean
 	username: string
-	interval: 4
+	interval: number
 	verbose: boolean
 }
 

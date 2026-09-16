@@ -63,7 +63,8 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		if (config.host) {
 			this.statusManager.updateStatus(InstanceStatus.Connecting)
 			this.initClient(this.#config, this.#secrets)
-			await this.initDevice()
+			// Every definition is built from the device, so there is nothing to export without one
+			if (!(await this.initDevice())) return
 			this.updateActions() // export actions
 			this.updateFeedbacks() // export feedbacks
 			this.updateVariableDefinitions() // export variable definitions
@@ -147,17 +148,22 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		)
 	}
 
-	private async initDevice(): Promise<void> {
+	/**
+	 * Fetch and parse the full device state, and start polling
+	 * @returns {boolean} Whether the device was initialised
+	 */
+	private async initDevice(): Promise<boolean> {
 		try {
 			const response = await this.clientGet('')
-			this.debug(response.data)
 			this.device = LacousticsDevice.fromUnknown(response.data)
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})
 			}, this.#config.interval ?? 1000)
+			return true
 		} catch (err) {
 			this.log('error', 'Could not initialise device')
 			handleError(err, this)
+			return false
 		}
 	}
 
@@ -169,7 +175,6 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			if (this.feedbackSubscriptions[key].size == 0) continue
 			try {
 				const response = await this.clientGet(key)
-				this.debug(response.data)
 				const data = { [key]: response.data }
 				this.device.devicePartial = data
 				keysToCheck.push(key)
@@ -193,7 +198,6 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 
 	public async queryDevice(key: FeedbackSubscriptionKey): Promise<void> {
 		const response = await this.clientGet(key)
-		this.debug(response.data)
 		const data = { [key]: response.data }
 		this.device.devicePartial = data
 		this.checkFeedbackKeys(key)

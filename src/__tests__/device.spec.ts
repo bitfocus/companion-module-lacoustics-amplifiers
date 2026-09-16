@@ -53,6 +53,37 @@ describe('LA7.16i power status', () => {
 	})
 })
 
+describe('LA1.16i power status', () => {
+	/*
+	 * The LA1.16i derives its schema from the LA7.16i one, but NOT its power
+	 * status: it reports the per-supply smps array of the base schema, confirmed
+	 * working against a live device before the LA7.16i override was added. The
+	 * override is inherited by default, so this pins the exception.
+	 */
+	const la116iPayload = () => {
+		const payload = buildPayload(DeviceSchemasByName['LA1.16i']) as Record<string, any>
+		payload.power.status = {
+			inp24v: true,
+			smps: [
+				{ index: 1, state: true },
+				{ index: 2, state: false },
+			],
+		}
+		return payload
+	}
+
+	it('accepts a per-supply smps array', () => {
+		expect(LacousticsDevice.fromUnknown(la116iPayload()).name).toBe('LA1.16i')
+	})
+
+	it('reports each supply separately', () => {
+		const device = LacousticsDevice.fromUnknown(la116iPayload())
+		expect(device.powerSmpsCount).toBe(2)
+		expect(device.powerSmpsStatus).toEqual({ 1: true, 2: false })
+		expect(device.power24vIn).toBe(true)
+	})
+})
+
 describe('partial device updates', () => {
 	let device: LacousticsDevice<'LA4X'>
 

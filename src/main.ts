@@ -3,7 +3,8 @@ import { GetConfigFields, type ModuleConfig, type ModuleSecrets } from './config
 import { UpdateVariableDefinitions, UpdateVariableValues } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
-import { handleError } from './errors.js'
+import { handleError, type ErrorKind } from './errors.js'
+import { BackoffScheduler, RECONNECT_BACKOFF } from './reconnect.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticsDevice } from './device.js'
 import { StatusManager } from './status.js'
@@ -25,6 +26,9 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	#controller = new AbortController()
 	device!: LacousticsDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
+	#reconnect: BackoffScheduler = this.createReconnectScheduler(this.#controller.signal)
+	/** Whether this run of failures has already logged the detail of a rejected payload */
+	#invalidDataReported = false
 	feedbackSubscriptions = LacousticsDevice.initFeedbackSubscriptionTracker()
 	throttledCheckFeedbacksById: ThrottledFunction<() => void> = this.createThrottledFeedbackCheck(
 		this.#controller.signal,
@@ -57,24 +61,35 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 
 		// Set this.throttledCheckedFeedbacksById() here so that it references the new AbortController
 		this.throttledCheckFeedbacksById = this.createThrottledFeedbackCheck(this.#controller.signal)
+		// Likewise the scheduler, so a retry pending against the old config is dropped
+		this.#reconnect = this.createReconnectScheduler(this.#controller.signal)
+		this.#invalidDataReported = false
 
 		this.#config = config
 		this.#secrets = secrets
 		if (config.host) {
 			this.statusManager.updateStatus(InstanceStatus.Connecting)
 			this.initClient(this.#config, this.#secrets)
-			// Every definition is built from the device, so there is nothing to export without one
-			if (!(await this.initDevice())) return
-			this.updateActions() // export actions
-			this.updateFeedbacks() // export feedbacks
-			this.updateVariableDefinitions() // export variable definitions
-			this.feedbackSubscriptions.info.add('var')
-			this.updateVariableValues()
-			this.checkAllFeedbacks()
+			await this.connect()
 		} else {
 			this.statusManager.updateStatus(InstanceStatus.BadConfig, 'No Host Configured')
 			return
 		}
+	}
+
+	/**
+	 * Query the device and export everything built from it. Also the retry entry point, so a module that comes up
+	 * before its amp ends up in the same state as one that did not
+	 */
+	private async connect(): Promise<void> {
+		// Every definition is built from the device, so there is nothing to export without one
+		if (!(await this.initDevice())) return
+		this.updateActions() // export actions
+		this.updateFeedbacks() // export feedbacks
+		this.updateVariableDefinitions() // export variable definitions
+		this.feedbackSubscriptions.info.add('var')
+		this.updateVariableValues()
+		this.checkAllFeedbacks()
 	}
 
 	initClient(config: ModuleConfig, secrets: ModuleSecrets): void {
@@ -159,12 +174,44 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})
 			}, this.#config.interval ?? 1000)
+			this.#reconnect.reset()
+			this.#invalidDataReported = false
 			return true
 		} catch (err) {
 			this.log('error', 'Could not initialise device')
-			handleError(err, this)
+			const kind = handleError(err, this, { terse: this.#invalidDataReported })
+			if (kind === 'invalidData') this.#invalidDataReported = true
+			// Credentials that are wrong now will be wrong on every attempt, and changing them runs configUpdated anyway
+			if (kind !== 'auth') this.scheduleReconnect(kind)
 			return false
 		}
+	}
+
+	/**
+	 * Queue another attempt at the initial query, on the backoff
+	 * @param {ErrorKind} kind What the failed attempt reported, which decides how the wait is described
+	 */
+	private scheduleReconnect(kind: ErrorKind): void {
+		const delay = this.#reconnect.schedule()
+		// An attempt is already pending, or the instance is being torn down
+		if (delay === undefined) return
+		const seconds = Math.round(delay / 1000)
+		this.log('info', `Retrying in ${seconds}s`)
+		this.statusManager.updateStatus(
+			kind === 'invalidData' ? InstanceStatus.UnknownWarning : InstanceStatus.ConnectionFailure,
+			`${kind === 'invalidData' ? 'Invalid data from device' : 'Connection failed'}, retrying in ${seconds}s`,
+		)
+	}
+
+	private createReconnectScheduler(signal: AbortSignal): BackoffScheduler {
+		return new BackoffScheduler(
+			() => {
+				this.log('info', 'Retrying device query')
+				this.connect().catch(() => {})
+			},
+			RECONNECT_BACKOFF,
+			signal,
+		)
 	}
 
 	private async pollDevice(): Promise<void> {

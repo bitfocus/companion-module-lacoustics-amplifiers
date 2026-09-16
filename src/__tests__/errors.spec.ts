@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { AxiosError } from 'axios'
 import { handleError } from '../errors.js'
 import { LacousticsDevice } from '../device.js'
 import type ModuleInstance from '../main.js'
@@ -55,5 +56,48 @@ describe('handleError for a rejected device payload', () => {
 		handleError(rejectionOf(payload), fakeInstance())
 		expect(warning()).toContain('power.status.smps: Invalid input: expected array, received undefined')
 		expect(warning()).not.toContain('(value:')
+	})
+
+	// The retry loop reports the same rejection until the device is fixed or the module updated
+	it('summarises instead of repeating every issue when asked', () => {
+		const payload = la716Payload()
+		payload.power.status.smps = false
+		handleError(rejectionOf(payload), fakeInstance(), { terse: true })
+		expect(warning()).toContain('Invalid data returned: 1 issue, detail logged on the first attempt')
+		expect(warning()).not.toContain('(value:')
+	})
+})
+
+describe('handleError tells the caller whether retrying could help', () => {
+	beforeEach(() => {
+		captureLogs()
+	})
+
+	afterEach(() => {
+		releaseLogs()
+	})
+
+	it('reports a rejected payload as invalid data', () => {
+		const payload = la716Payload()
+		payload.power.status.smps = false
+		expect(handleError(rejectionOf(payload), fakeInstance())).toBe('invalidData')
+	})
+
+	it('reports rejected credentials as auth, which is not worth retrying', () => {
+		const err = new AxiosError('Unauthorized', 'ERR_BAD_REQUEST', undefined, {}, {
+			status: 401,
+			data: '',
+		} as unknown as AxiosError['response'])
+		expect(handleError(err, fakeInstance())).toBe('auth')
+	})
+
+	it('reports an unanswered request as transport', () => {
+		expect(handleError(new AxiosError('Request timed out', 'ETIMEDOUT', undefined, {}), fakeInstance())).toBe(
+			'transport',
+		)
+	})
+
+	it('reports anything else as unknown', () => {
+		expect(handleError(new Error('boom'), fakeInstance())).toBe('unknown')
 	})
 })

@@ -17,6 +17,9 @@ import { DeviceSchemasByName } from './schemas/index.js'
 
 export { UpgradeScripts }
 
+/** Consecutive poll cycles with nothing answering, before polling gives way to the reconnect backoff */
+const FAILED_CYCLES_BEFORE_RECONNECT = 3
+
 export default class ModuleInstance extends InstanceBase<ModuleTypes> implements InstanceBaseExt {
 	#config!: ModuleConfig // Setup in init()
 	#secrets!: ModuleSecrets // Setup in init()
@@ -29,6 +32,8 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	#reconnect: BackoffScheduler = this.createReconnectScheduler(this.#controller.signal)
 	/** Whether this run of failures has already logged the detail of a rejected payload */
 	#invalidDataReported = false
+	/** Consecutive poll cycles in which every request went unanswered */
+	#failedPollCycles = 0
 	feedbackSubscriptions = LacousticsDevice.initFeedbackSubscriptionTracker()
 	throttledCheckFeedbacksById: ThrottledFunction<() => void> = this.createThrottledFeedbackCheck(
 		this.#controller.signal,
@@ -64,6 +69,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		// Likewise the scheduler, so a retry pending against the old config is dropped
 		this.#reconnect = this.createReconnectScheduler(this.#controller.signal)
 		this.#invalidDataReported = false
+		this.#failedPollCycles = 0
 
 		this.#config = config
 		this.#secrets = secrets
@@ -216,21 +222,49 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 
 	private async pollDevice(): Promise<void> {
 		const { signal } = this.#controller
+		const keys = feedbackSubscriptionKeys.filter((key) => this.feedbackSubscriptions[key].size > 0)
+		// Together, rather than one after another: a device that has stopped answering then costs one timeout for the
+		// cycle instead of one per domain. The queue still spaces the requests at the rate the API documents
+		const results = await Promise.allSettled(keys.map(async (key) => ({ key, response: await this.clientGet(key) })))
+		if (signal.aborted) return
+
 		const keysToCheck: FeedbackSubscriptionKey[] = []
-		for (const key of feedbackSubscriptionKeys) {
-			if (signal.aborted) return
-			if (this.feedbackSubscriptions[key].size == 0) continue
+		const failures: unknown[] = []
+		let unanswered = 0
+		for (const result of results) {
+			if (result.status === 'rejected') {
+				unanswered++
+				failures.push(result.reason)
+				continue
+			}
 			try {
-				const response = await this.clientGet(key)
-				const data = { [key]: response.data }
-				this.device.devicePartial = data
-				keysToCheck.push(key)
+				this.device.devicePartial = { [result.value.key]: result.value.response.data }
+				keysToCheck.push(result.value.key)
 			} catch (err) {
-				this.log('warn', 'Polling error')
-				handleError(err, this)
+				failures.push(err)
 			}
 		}
-		if (signal.aborted) return
+
+		if (failures.length > 0) {
+			// One line for the cycle: a device that has gone away fails every domain, every interval
+			this.log('warn', `Polling error on ${failures.length} of ${keys.length} domains`)
+			const kind = handleError(failures[0], this, { terse: this.#invalidDataReported })
+			if (kind === 'invalidData') this.#invalidDataReported = true
+		} else {
+			this.#invalidDataReported = false
+		}
+
+		// Only unanswered requests count: a device answering with data this module cannot parse is still there, so
+		// reconnecting to it would achieve nothing
+		this.#failedPollCycles = keys.length > 0 && unanswered === keys.length ? this.#failedPollCycles + 1 : 0
+		if (this.#failedPollCycles >= FAILED_CYCLES_BEFORE_RECONNECT) {
+			this.log('warn', `Polling failed ${this.#failedPollCycles} cycles in a row, reconnecting`)
+			this.#failedPollCycles = 0
+			// connect() restarts polling once the device answers again
+			this.scheduleReconnect('transport')
+			return
+		}
+
 		this.checkFeedbackKeys(...keysToCheck)
 		this.updateVariableValues()
 		this.#pollTimer = setTimeout(() => {

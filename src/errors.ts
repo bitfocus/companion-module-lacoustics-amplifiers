@@ -7,7 +7,7 @@ export function handleError(err: unknown, instance: ModuleInstance): void {
 	if (axios.isAxiosError(err)) {
 		handleAxiosError(err, instance)
 	} else if (err instanceof ZodError) {
-		handleZodError(err)
+		handleZodError(err, instance)
 	} else {
 		handleUnknownError(err, instance)
 	}
@@ -130,12 +130,32 @@ function handleNetworkError(err: AxiosError, instance: ModuleInstance): void {
 	}
 }
 
-function handleZodError(err: ZodError): void {
+const MAX_ISSUE_INPUT_LENGTH = 200
+
+/**
+ * Render a rejected value for the log, truncated since it can be a whole domain object
+ * @param {unknown} input The value the schema rejected
+ * @returns {string} The value as JSON, cut to MAX_ISSUE_INPUT_LENGTH characters
+ */
+function formatIssueInput(input: unknown): string {
+	const text = JSON.stringify(input) ?? String(input)
+	return text.length > MAX_ISSUE_INPUT_LENGTH ? `${text.slice(0, MAX_ISSUE_INPUT_LENGTH)}…` : text
+}
+
+function handleZodError(err: ZodError, instance: ModuleInstance): void {
 	const logger = createModuleLogger('Zod Error Handler')
+	// The request itself succeeded and already reported Ok, so without this a response the module cannot use stays green
+	instance.statusManager.updateStatus(InstanceStatus.UnknownWarning, 'Invalid data returned by device')
 	logger.debug(JSON.stringify(err))
 
-	// Format Zod errors more readably
-	const formattedErrors = err.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('\n  ')
+	// Format Zod errors more readably. The rejected value goes in too: debug lines never reach Companion's main log,
+	// which is the one users send, so without it a report says what was wrong but not what the device sent
+	const formattedErrors = err.issues
+		.map((issue) => {
+			const value = issue.input === undefined ? '' : ` (value: ${formatIssueInput(issue.input)})`
+			return `${issue.path.join('.')}: ${issue.message}${value}`
+		})
+		.join('\n  ')
 
 	logger.warn(`Invalid data returned:\n  ${formattedErrors}`)
 }

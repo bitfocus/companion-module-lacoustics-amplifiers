@@ -3,7 +3,8 @@ import { GetConfigFields, type ModuleConfig, type ModuleSecrets } from './config
 import { UpdateVariableDefinitions, UpdateVariableValues } from './variables.js'
 import { UpgradeScripts } from './upgrades.js'
 import { UpdateActions } from './actions.js'
-import { handleError } from './errors.js'
+import { handleError, type ErrorKind } from './errors.js'
+import { BackoffScheduler, RECONNECT_BACKOFF } from './reconnect.js'
 import { UpdateFeedbacks } from './feedbacks.js'
 import { LacousticsDevice } from './device.js'
 import { StatusManager } from './status.js'
@@ -16,6 +17,9 @@ import { DeviceSchemasByName } from './schemas/index.js'
 
 export { UpgradeScripts }
 
+/** Consecutive poll cycles with nothing answering, before polling gives way to the reconnect backoff */
+const FAILED_CYCLES_BEFORE_RECONNECT = 3
+
 export default class ModuleInstance extends InstanceBase<ModuleTypes> implements InstanceBaseExt {
 	#config!: ModuleConfig // Setup in init()
 	#secrets!: ModuleSecrets // Setup in init()
@@ -25,6 +29,11 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 	#controller = new AbortController()
 	device!: LacousticsDevice<Enums.InfoNameEnum>
 	#pollTimer: NodeJS.Timeout | undefined = undefined
+	#reconnect: BackoffScheduler = this.createReconnectScheduler(this.#controller.signal)
+	/** Whether this run of failures has already logged the detail of a rejected payload */
+	#invalidDataReported = false
+	/** Consecutive poll cycles in which every request went unanswered */
+	#failedPollCycles = 0
 	feedbackSubscriptions = LacousticsDevice.initFeedbackSubscriptionTracker()
 	throttledCheckFeedbacksById: ThrottledFunction<() => void> = this.createThrottledFeedbackCheck(
 		this.#controller.signal,
@@ -57,23 +66,36 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 
 		// Set this.throttledCheckedFeedbacksById() here so that it references the new AbortController
 		this.throttledCheckFeedbacksById = this.createThrottledFeedbackCheck(this.#controller.signal)
+		// Likewise the scheduler, so a retry pending against the old config is dropped
+		this.#reconnect = this.createReconnectScheduler(this.#controller.signal)
+		this.#invalidDataReported = false
+		this.#failedPollCycles = 0
 
 		this.#config = config
 		this.#secrets = secrets
 		if (config.host) {
 			this.statusManager.updateStatus(InstanceStatus.Connecting)
 			this.initClient(this.#config, this.#secrets)
-			await this.initDevice()
-			this.updateActions() // export actions
-			this.updateFeedbacks() // export feedbacks
-			this.updateVariableDefinitions() // export variable definitions
-			this.feedbackSubscriptions.info.add('var')
-			this.updateVariableValues()
-			this.checkAllFeedbacks()
+			await this.connect()
 		} else {
 			this.statusManager.updateStatus(InstanceStatus.BadConfig, 'No Host Configured')
 			return
 		}
+	}
+
+	/**
+	 * Query the device and export everything built from it. Also the retry entry point, so a module that comes up
+	 * before its amp ends up in the same state as one that did not
+	 */
+	private async connect(): Promise<void> {
+		// Every definition is built from the device, so there is nothing to export without one
+		if (!(await this.initDevice())) return
+		this.updateActions() // export actions
+		this.updateFeedbacks() // export feedbacks
+		this.updateVariableDefinitions() // export variable definitions
+		this.feedbackSubscriptions.info.add('var')
+		this.updateVariableValues()
+		this.checkAllFeedbacks()
 	}
 
 	initClient(config: ModuleConfig, secrets: ModuleSecrets): void {
@@ -147,38 +169,102 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 		)
 	}
 
-	private async initDevice(): Promise<void> {
+	/**
+	 * Fetch and parse the full device state, and start polling
+	 * @returns {boolean} Whether the device was initialised
+	 */
+	private async initDevice(): Promise<boolean> {
 		try {
 			const response = await this.clientGet('')
-			this.debug(response.data)
 			this.device = LacousticsDevice.fromUnknown(response.data)
 			this.#pollTimer = setTimeout(() => {
 				this.pollDevice().catch(() => {})
 			}, this.#config.interval ?? 1000)
+			this.#reconnect.reset()
+			this.#invalidDataReported = false
+			return true
 		} catch (err) {
 			this.log('error', 'Could not initialise device')
-			handleError(err, this)
+			const kind = handleError(err, this, { terse: this.#invalidDataReported })
+			if (kind === 'invalidData') this.#invalidDataReported = true
+			// Credentials that are wrong now will be wrong on every attempt, and changing them runs configUpdated anyway
+			if (kind !== 'auth') this.scheduleReconnect(kind)
+			return false
 		}
+	}
+
+	/**
+	 * Queue another attempt at the initial query, on the backoff
+	 * @param {ErrorKind} kind What the failed attempt reported, which decides how the wait is described
+	 */
+	private scheduleReconnect(kind: ErrorKind): void {
+		const delay = this.#reconnect.schedule()
+		// An attempt is already pending, or the instance is being torn down
+		if (delay === undefined) return
+		const seconds = Math.round(delay / 1000)
+		this.log('info', `Retrying in ${seconds}s`)
+		this.statusManager.updateStatus(
+			kind === 'invalidData' ? InstanceStatus.UnknownWarning : InstanceStatus.ConnectionFailure,
+			`${kind === 'invalidData' ? 'Invalid data from device' : 'Connection failed'}, retrying in ${seconds}s`,
+		)
+	}
+
+	private createReconnectScheduler(signal: AbortSignal): BackoffScheduler {
+		return new BackoffScheduler(
+			() => {
+				this.log('info', 'Retrying device query')
+				this.connect().catch(() => {})
+			},
+			RECONNECT_BACKOFF,
+			signal,
+		)
 	}
 
 	private async pollDevice(): Promise<void> {
 		const { signal } = this.#controller
+		const keys = feedbackSubscriptionKeys.filter((key) => this.feedbackSubscriptions[key].size > 0)
+		// Together, rather than one after another: a device that has stopped answering then costs one timeout for the
+		// cycle instead of one per domain. The queue still spaces the requests at the rate the API documents
+		const results = await Promise.allSettled(keys.map(async (key) => ({ key, response: await this.clientGet(key) })))
+		if (signal.aborted) return
+
 		const keysToCheck: FeedbackSubscriptionKey[] = []
-		for (const key of feedbackSubscriptionKeys) {
-			if (signal.aborted) return
-			if (this.feedbackSubscriptions[key].size == 0) continue
+		const failures: unknown[] = []
+		let unanswered = 0
+		for (const result of results) {
+			if (result.status === 'rejected') {
+				unanswered++
+				failures.push(result.reason)
+				continue
+			}
 			try {
-				const response = await this.clientGet(key)
-				this.debug(response.data)
-				const data = { [key]: response.data }
-				this.device.devicePartial = data
-				keysToCheck.push(key)
+				this.device.devicePartial = { [result.value.key]: result.value.response.data }
+				keysToCheck.push(result.value.key)
 			} catch (err) {
-				this.log('warn', 'Polling error')
-				handleError(err, this)
+				failures.push(err)
 			}
 		}
-		if (signal.aborted) return
+
+		if (failures.length > 0) {
+			// One line for the cycle: a device that has gone away fails every domain, every interval
+			this.log('warn', `Polling error on ${failures.length} of ${keys.length} domains`)
+			const kind = handleError(failures[0], this, { terse: this.#invalidDataReported })
+			if (kind === 'invalidData') this.#invalidDataReported = true
+		} else {
+			this.#invalidDataReported = false
+		}
+
+		// Only unanswered requests count: a device answering with data this module cannot parse is still there, so
+		// reconnecting to it would achieve nothing
+		this.#failedPollCycles = keys.length > 0 && unanswered === keys.length ? this.#failedPollCycles + 1 : 0
+		if (this.#failedPollCycles >= FAILED_CYCLES_BEFORE_RECONNECT) {
+			this.log('warn', `Polling failed ${this.#failedPollCycles} cycles in a row, reconnecting`)
+			this.#failedPollCycles = 0
+			// connect() restarts polling once the device answers again
+			this.scheduleReconnect('transport')
+			return
+		}
+
 		this.checkFeedbackKeys(...keysToCheck)
 		this.updateVariableValues()
 		this.#pollTimer = setTimeout(() => {
@@ -193,7 +279,6 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 
 	public async queryDevice(key: FeedbackSubscriptionKey): Promise<void> {
 		const response = await this.clientGet(key)
-		this.debug(response.data)
 		const data = { [key]: response.data }
 		this.device.devicePartial = data
 		this.checkFeedbackKeys(key)

@@ -9,6 +9,7 @@ To date the following devices have been tested and confirmed working:
 
 - LA1.16i
 - LA2Xi
+- LA7.16i
 
 Please confirm functionality or report issues with other devices on the [git repo](https://github.com/bitfocus/companion-module-lacoustics-amplifiers/issues). Non amplifier electronics, LC16D, LS10, P1 are nominally supported by the API but may have few if any supported actions and feedbacks at this stage.
 

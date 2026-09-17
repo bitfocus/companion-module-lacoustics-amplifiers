@@ -27,6 +27,63 @@ describe('LacousticsDevice.fromUnknown', () => {
 	})
 })
 
+describe('LA7.16i power status', () => {
+	/*
+	 * The LA7.16i reports its SMPS as a single boolean, like the LA2Xi, not the
+	 * per-supply array in the base schema. No capture of the full payload yet —
+	 * the evidence is a user log from a live LA7.16i on 2026-09-15, rejecting
+	 * `power.status.smps: expected array, received boolean` and nothing else, so
+	 * `inp24v` is present as a boolean too. The rest of the payload is synthetic.
+	 */
+	const la716iPayload = () => {
+		const payload = buildPayload(DeviceSchemasByName['LA7.16i']) as Record<string, any>
+		payload.power.status = { inp24v: true, smps: false }
+		return payload
+	}
+
+	it('accepts a boolean smps', () => {
+		expect(LacousticsDevice.fromUnknown(la716iPayload()).name).toBe('LA7.16i')
+	})
+
+	it('reports the boolean as a single supply', () => {
+		const device = LacousticsDevice.fromUnknown(la716iPayload())
+		expect(device.powerSmpsCount).toBe(1)
+		expect(device.powerSmpsStatus).toEqual({ 1: false })
+		expect(device.power24vIn).toBe(true)
+	})
+})
+
+describe('LA1.16i power status', () => {
+	/*
+	 * The LA1.16i derives its schema from the LA7.16i one, but NOT its power
+	 * status: it reports the per-supply smps array of the base schema, confirmed
+	 * working against a live device before the LA7.16i override was added. The
+	 * override is inherited by default, so this pins the exception.
+	 */
+	const la116iPayload = () => {
+		const payload = buildPayload(DeviceSchemasByName['LA1.16i']) as Record<string, any>
+		payload.power.status = {
+			inp24v: true,
+			smps: [
+				{ index: 1, state: true },
+				{ index: 2, state: false },
+			],
+		}
+		return payload
+	}
+
+	it('accepts a per-supply smps array', () => {
+		expect(LacousticsDevice.fromUnknown(la116iPayload()).name).toBe('LA1.16i')
+	})
+
+	it('reports each supply separately', () => {
+		const device = LacousticsDevice.fromUnknown(la116iPayload())
+		expect(device.powerSmpsCount).toBe(2)
+		expect(device.powerSmpsStatus).toEqual({ 1: true, 2: false })
+		expect(device.power24vIn).toBe(true)
+	})
+})
+
 describe('partial device updates', () => {
 	let device: LacousticsDevice<'LA4X'>
 

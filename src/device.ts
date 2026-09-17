@@ -6,6 +6,11 @@ import * as Enums from './enums/enums.js'
 import { feedbackSubscriptionKeys, FeedbackSubscriptionKey, feedbackSubscriptions } from './types.js'
 import { toMerged } from 'es-toolkit'
 
+/**
+ * Keep the rejected value on each issue, so handleZodError can log what the device actually sent
+ */
+const parseParams = { reportInput: true } as const
+
 function isValidInfoName(name: unknown): name is Enums.InfoNameEnum {
 	return typeof name === 'string' && name in DeviceSchemasByName
 }
@@ -25,7 +30,7 @@ export class LacousticsDevice<N extends Enums.InfoNameEnum> {
 		const name = (data as any)?.info?.name
 		if (isValidInfoName(name)) {
 			logger.info(`Valid device type found: ${name}`)
-			const device = DeviceSchemasByName[name].parse(data)
+			const device = DeviceSchemasByName[name].parse(data, parseParams)
 			//const parsed = DeviceSchema.parse(data)
 			return new LacousticsDevice(device)
 		}
@@ -64,7 +69,7 @@ export class LacousticsDevice<N extends Enums.InfoNameEnum> {
 	}
 
 	set device(device: unknown) {
-		const newDevice = DeviceSchemasByName[this.#device.info.name].parse(device)
+		const newDevice = DeviceSchemasByName[this.#device.info.name].parse(device, parseParams)
 		if (newDevice.info.name !== this.#device.info.name)
 			throw new Error(`Device name mismatch: expected ${this.#device.info.name}, got ${newDevice.info.name}`)
 		this.#logger.info(`Updating all device parameters`)
@@ -72,13 +77,13 @@ export class LacousticsDevice<N extends Enums.InfoNameEnum> {
 	}
 
 	set devicePartial(device: unknown) {
-		const newDevice = partialDeviceSchema(this.#device.info.name).parse(device)
+		const newDevice = partialDeviceSchema(this.#device.info.name).parse(device, parseParams)
 		this.#device = { ...this.#device, ...newDevice }
 		this.#logger.debug(`Updating ${Object.keys(newDevice)}`)
 	}
 
 	public deviceDeepPartial(device: unknown): FeedbackSubscriptionKey[] {
-		const newDevice = deepPartialDeviceSchema(this.#device.info.name).parse(device)
+		const newDevice = deepPartialDeviceSchema(this.#device.info.name).parse(device, parseParams)
 		this.#device = toMerged(this.#device, newDevice)
 		this.#logger.debug(`Deep partial update on: ${Object.keys(newDevice)}`)
 		return Object.keys(newDevice).filter((key): key is FeedbackSubscriptionKey =>

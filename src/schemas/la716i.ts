@@ -14,7 +14,12 @@ export const DeviceSchema = z.object({
 	lldp: Schemas.LldpSchema,
 	input: Schemas.InputSchema,
 	routing: Schemas.RoutingSchema,
-	power: Schemas.PowerSchema,
+	power: Schemas.PowerSchema.extend({
+		status: z.object({
+			inp24v: Schemas.Bool,
+			smps: Schemas.Bool,
+		}),
+	}),
 	gpio: Schemas.GpioSchema,
 	control: Schemas.ControlSchema,
 	clock: Schemas.ClockSchema,

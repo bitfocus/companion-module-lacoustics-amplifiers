@@ -300,37 +300,55 @@ describe('verbose logging', () => {
 	})
 })
 
+interface RefusingDevice {
+	/** What to put in the config's host field */
+	host: string
+	/** The Authorization header of the last request, if it had one */
+	authorization: () => string | undefined
+	close: () => Promise<void>
+}
+
+/**
+ * Serve 401 to every request on a local port, as an amp does when it wants credentials it was not given or does not
+ * accept. Tests that depend on the error axios builds use this rather than a mocked client, which never builds one
+ */
+async function startRefusingDevice(): Promise<RefusingDevice> {
+	let authorization: string | undefined
+	const server: Server = createServer((req, res) => {
+		authorization = req.headers.authorization
+		res.writeHead(401).end()
+	})
+	await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+	const { port } = server.address() as AddressInfo
+	return {
+		host: `127.0.0.1:${port}`,
+		authorization: () => authorization,
+		close: async () => new Promise((resolve) => server.close(() => resolve())),
+	}
+}
+
 /*
  * A verbose log is what users attach to a bug report, and a failed request is logged whole, its config included.
- * With authentication on, that config holds the amp's password. These run the real axios client against a local
- * server, since a mocked client never builds the error that gets logged
+ * With authentication on, that config holds the amp's password
  */
 describe('credentials in a verbose log', () => {
 	const password = 'not-for-the-log'
 	const basicCredentials = Buffer.from(`admin:${password}`).toString('base64')
-	let server: Server
-	let receivedAuthorization: string | undefined
+	let device: RefusingDevice
 	let authConfig: ModuleConfig
 	let instance: ModuleInstance
 	let lines: LogLine[]
 
 	beforeEach(async () => {
 		lines = captureLogs()
-		receivedAuthorization = undefined
-		// Refuses every request, as an amp does when the credentials are wrong
-		server = createServer((req, res) => {
-			receivedAuthorization = req.headers.authorization
-			res.writeHead(401).end()
-		})
-		await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
-		const { port } = server.address() as AddressInfo
-		authConfig = { host: `127.0.0.1:${port}`, auth: true, username: 'admin', interval: 1000, verbose: true }
+		device = await startRefusingDevice()
+		authConfig = { host: device.host, auth: true, username: 'admin', interval: 1000, verbose: true }
 		instance = new ModuleInstance(fakeContext())
 	})
 
 	afterEach(async () => {
 		await instance.destroy()
-		await new Promise((resolve) => server.close(resolve))
+		await device.close()
 		releaseLogs()
 	})
 
@@ -343,7 +361,7 @@ describe('credentials in a verbose log', () => {
 
 	it('still sends them to the device', async () => {
 		await instance.configUpdated(authConfig, { password })
-		expect(receivedAuthorization).toBe(`Basic ${basicCredentials}`)
+		expect(device.authorization()).toBe(`Basic ${basicCredentials}`)
 	})
 
 	it('keeps the password out of every log line', async () => {
@@ -356,5 +374,47 @@ describe('credentials in a verbose log', () => {
 	it('still shows that credentials were configured', async () => {
 		await instance.configUpdated(authConfig, { password })
 		expect(loggedError().config).toHaveProperty('auth')
+	})
+})
+
+/*
+ * An amp with authentication enabled refuses a connection that has Use Authentication off. "Check credentials" sends
+ * that user looking for a wrong password when none was ever sent
+ */
+describe('a device refusing the request with 401', () => {
+	let device: RefusingDevice
+	let instance: ModuleInstance
+	let lines: LogLine[]
+
+	beforeEach(async () => {
+		lines = captureLogs()
+		device = await startRefusingDevice()
+		instance = new ModuleInstance(fakeContext())
+	})
+
+	afterEach(async () => {
+		await instance.destroy()
+		await device.close()
+		releaseLogs()
+	})
+
+	const errors = () => lines.filter((line) => line.level === 'error').map((line) => line.message)
+
+	it('says to enable authentication when none was sent', async () => {
+		const updateStatus = vi.spyOn(instance.statusManager, 'updateStatus')
+		await instance.configUpdated({ ...config, host: device.host, auth: false }, secrets)
+
+		expect(device.authorization()).toBeUndefined()
+		expect(errors()).toContain('Authentication error 401: The amp requires authentication: enable Use Authentication')
+		expect(updateStatus).toHaveBeenLastCalledWith(InstanceStatus.AuthenticationFailure, 'Enable Use Authentication')
+	})
+
+	// Telling someone with authentication on to turn it on would be worse than the old message
+	it('says to check the credentials when they were sent', async () => {
+		await instance.configUpdated({ ...config, host: device.host, auth: true, username: 'admin' }, { password: 'x' })
+
+		expect(device.authorization()).toBeDefined()
+		expect(errors()).toContain('Authentication error 401: Check credentials')
+		expect(errors().join('\n')).not.toContain('enable Use Authentication')
 	})
 })

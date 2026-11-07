@@ -54,6 +54,12 @@ function handleHttpError(err: AxiosError, instance: ModuleInstance): ErrorKind {
 	if (status && status >= 500) {
 		instance.statusManager.updateStatus(InstanceStatus.UnknownError)
 		logger.error(`Server error ${status}: ${err.message}`)
+	} else if (status === 401 && err.config?.auth === undefined) {
+		// 401 means the request lacked valid credentials, and this one carried none, so nothing was wrong with a
+		// password. A 403 stays below: it can refuse for other reasons than missing credentials
+		instance.statusManager.updateStatus(InstanceStatus.AuthenticationFailure, 'Enable Use Authentication')
+		logger.error(`Authentication error ${status}: The amp requires authentication: enable Use Authentication`)
+		return 'auth'
 	} else if (status === 401 || status === 403) {
 		instance.statusManager.updateStatus(InstanceStatus.AuthenticationFailure)
 		logger.error(`Authentication error ${status}: Check credentials`)

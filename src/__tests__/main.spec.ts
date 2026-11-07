@@ -1,3 +1,5 @@
+import { createServer, type Server } from 'node:http'
+import type { AddressInfo } from 'node:net'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { InstanceStatus } from '@companion-module/base'
 import axios, { AxiosError, type AxiosInstance } from 'axios'
@@ -295,5 +297,64 @@ describe('verbose logging', () => {
 		await instance.configUpdated(verboseConfig, secrets)
 		await instance.queryDevice('power')
 		expect(timesLogged(payload.power)).toBe(1)
+	})
+})
+
+/*
+ * A verbose log is what users attach to a bug report, and a failed request is logged whole, its config included.
+ * With authentication on, that config holds the amp's password. These run the real axios client against a local
+ * server, since a mocked client never builds the error that gets logged
+ */
+describe('credentials in a verbose log', () => {
+	const password = 'not-for-the-log'
+	const basicCredentials = Buffer.from(`admin:${password}`).toString('base64')
+	let server: Server
+	let receivedAuthorization: string | undefined
+	let authConfig: ModuleConfig
+	let instance: ModuleInstance
+	let lines: LogLine[]
+
+	beforeEach(async () => {
+		lines = captureLogs()
+		receivedAuthorization = undefined
+		// Refuses every request, as an amp does when the credentials are wrong
+		server = createServer((req, res) => {
+			receivedAuthorization = req.headers.authorization
+			res.writeHead(401).end()
+		})
+		await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve))
+		const { port } = server.address() as AddressInfo
+		authConfig = { host: `127.0.0.1:${port}`, auth: true, username: 'admin', interval: 1000, verbose: true }
+		instance = new ModuleInstance(fakeContext())
+	})
+
+	afterEach(async () => {
+		await instance.destroy()
+		await new Promise((resolve) => server.close(resolve))
+		releaseLogs()
+	})
+
+	/** The failed request, as the verbose log recorded it */
+	const loggedError = (): { config: Record<string, unknown> } => {
+		const line = lines.find((l) => l.level === 'debug' && l.message.includes('"name":"AxiosError"'))
+		if (!line) throw new Error('the failed request was not logged')
+		return JSON.parse(line.message)
+	}
+
+	it('still sends them to the device', async () => {
+		await instance.configUpdated(authConfig, { password })
+		expect(receivedAuthorization).toBe(`Basic ${basicCredentials}`)
+	})
+
+	it('keeps the password out of every log line', async () => {
+		await instance.configUpdated(authConfig, { password })
+		loggedError()
+		expect(lines.filter((l) => l.message.includes(password) || l.message.includes(basicCredentials))).toEqual([])
+	})
+
+	// Whether the logged config has an auth key is how a support log shows authentication was turned on at all
+	it('still shows that credentials were configured', async () => {
+		await instance.configUpdated(authConfig, { password })
+		expect(loggedError().config).toHaveProperty('auth')
 	})
 })

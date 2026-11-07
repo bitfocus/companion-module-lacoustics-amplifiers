@@ -107,6 +107,7 @@ export default class ModuleInstance extends InstanceBase<ModuleTypes> implements
 						password: secrets.password,
 					}
 				: undefined,
+			redact: ['auth', 'authorization'],
 			timeout: 5000,
 			headers: {
 				'User-Agent': `companion-module/${this.label}`,
